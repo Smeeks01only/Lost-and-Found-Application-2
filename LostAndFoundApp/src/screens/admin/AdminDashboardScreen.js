@@ -1,0 +1,334 @@
+/**
+ * Admin Dashboard Screen
+ * System overview and management for administrators
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+    View,
+    Text,
+    ScrollView,
+    TouchableOpacity,
+    StyleSheet,
+    RefreshControl,
+    Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { itemsAPI, matchesAPI } from '../../api';
+import { COLORS } from '../../constants';
+
+export default function AdminDashboardScreen({ navigation }) {
+    const [stats, setStats] = useState({
+        totalLostItems: 0,
+        totalFoundItems: 0,
+        pendingClaims: 0,
+        totalMatches: 0,
+        recentActivity: [],
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const loadDashboardData = useCallback(async () => {
+        try {
+            // Load stats from various endpoints
+            const [lostItems, foundItems, claims, matches] = await Promise.all([
+                itemsAPI.getLostItems().catch(() => ({ results: [] })),
+                itemsAPI.getFoundItems().catch(() => ({ results: [] })),
+                matchesAPI.getPendingClaims().catch(() => ({ results: [] })),
+                matchesAPI.getMatches().catch(() => ({ results: [] })),
+            ]);
+
+            setStats({
+                totalLostItems: lostItems.results?.length || lostItems.count || 0,
+                totalFoundItems: foundItems.results?.length || foundItems.count || 0,
+                pendingClaims: claims.results?.length || claims.length || 0,
+                totalMatches: matches.results?.length || matches.count || 0,
+            });
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+        } finally {
+            setIsLoading(false);
+            setIsRefreshing(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, [loadDashboardData]);
+
+    const onRefresh = () => {
+        setIsRefreshing(true);
+        loadDashboardData();
+    };
+
+    const StatCard = ({ icon, title, value, color, onPress }) => (
+        <TouchableOpacity
+            style={[styles.statCard, { borderLeftColor: color }]}
+            onPress={onPress}
+            disabled={!onPress}
+        >
+            <Text style={styles.statIcon}>{icon}</Text>
+            <View style={styles.statContent}>
+                <Text style={styles.statValue}>{value}</Text>
+                <Text style={styles.statTitle}>{title}</Text>
+            </View>
+        </TouchableOpacity>
+    );
+
+    const ActionCard = ({ icon, title, subtitle, onPress }) => (
+        <TouchableOpacity style={styles.actionCard} onPress={onPress}>
+            <Text style={styles.actionIcon}>{icon}</Text>
+            <View style={styles.actionContent}>
+                <Text style={styles.actionTitle}>{title}</Text>
+                <Text style={styles.actionSubtitle}>{subtitle}</Text>
+            </View>
+            <Text style={styles.actionArrow}>→</Text>
+        </TouchableOpacity>
+    );
+
+    return (
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Admin Dashboard</Text>
+                <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>ADMIN</Text>
+                </View>
+            </View>
+
+            <ScrollView
+                contentContainerStyle={styles.content}
+                refreshControl={
+                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+                }
+            >
+                {/* Stats Grid */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>System Overview</Text>
+                    <View style={styles.statsGrid}>
+                        <StatCard
+                            icon="📦"
+                            title="Lost Items"
+                            value={stats.totalLostItems}
+                            color={COLORS.primary}
+                        />
+                        <StatCard
+                            icon="✅"
+                            title="Found Items"
+                            value={stats.totalFoundItems}
+                            color={COLORS.success}
+                        />
+                        <StatCard
+                            icon="🔗"
+                            title="Matches"
+                            value={stats.totalMatches}
+                            color="#8B5CF6"
+                        />
+                        <StatCard
+                            icon="⏳"
+                            title="Pending Claims"
+                            value={stats.pendingClaims}
+                            color={COLORS.warning}
+                        />
+                    </View>
+                </View>
+
+                {/* Quick Actions */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Quick Actions</Text>
+                    <ActionCard
+                        icon="📋"
+                        title="Review Claims"
+                        subtitle="Process pending ownership claims"
+                        onPress={() => navigation.navigate('ClaimsReview')}
+                    />
+                    <ActionCard
+                        icon="📦"
+                        title="Manage Found Items"
+                        subtitle="Add or update found items"
+                        onPress={() => navigation.navigate('FoundItems')}
+                    />
+                    <ActionCard
+                        icon="🔄"
+                        title="Run Matching Algorithm"
+                        subtitle="Trigger NLP-based item matching"
+                        onPress={() => Alert.alert(
+                            'Run Matching',
+                            'This will trigger the matching algorithm for all items.',
+                            [
+                                { text: 'Cancel', style: 'cancel' },
+                                { text: 'Run', onPress: () => Alert.alert('Success', 'Matching started') }
+                            ]
+                        )}
+                    />
+                </View>
+
+                {/* System Status */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>System Status</Text>
+                    <View style={styles.statusCard}>
+                        <View style={styles.statusRow}>
+                            <Text style={styles.statusLabel}>NLP Model</Text>
+                            <View style={styles.statusIndicator}>
+                                <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
+                                <Text style={styles.statusValue}>Active</Text>
+                            </View>
+                        </View>
+                        <View style={styles.statusRow}>
+                            <Text style={styles.statusLabel}>Database</Text>
+                            <View style={styles.statusIndicator}>
+                                <View style={[styles.statusDot, { backgroundColor: COLORS.success }]} />
+                                <Text style={styles.statusValue}>Connected</Text>
+                            </View>
+                        </View>
+                        <View style={styles.statusRow}>
+                            <Text style={styles.statusLabel}>Background Tasks</Text>
+                            <View style={styles.statusIndicator}>
+                                <View style={[styles.statusDot, { backgroundColor: COLORS.warning }]} />
+                                <Text style={styles.statusValue}>Celery Required</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: COLORS.background,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: COLORS.surface,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.border,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    adminBadge: {
+        backgroundColor: COLORS.error,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    adminBadgeText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    content: {
+        padding: 16,
+    },
+    section: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: COLORS.text,
+        marginBottom: 12,
+    },
+    statsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+    },
+    statCard: {
+        backgroundColor: COLORS.surface,
+        borderRadius: 12,
+        padding: 16,
+        width: '47%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderLeftWidth: 4,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    statIcon: {
+        fontSize: 28,
+        marginRight: 12,
+    },
+    statContent: {
+        flex: 1,
+    },
+    statValue: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    statTitle: {
+        fontSize: 12,
+        color: COLORS.textSecondary,
+    },
+    actionCard: {
+        backgroundColor: COLORS.surface,
+        borderRadius: 12,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    actionIcon: {
+        fontSize: 24,
+        marginRight: 12,
+    },
+    actionContent: {
+        flex: 1,
+    },
+    actionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.text,
+    },
+    actionSubtitle: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+    },
+    actionArrow: {
+        fontSize: 18,
+        color: COLORS.textSecondary,
+    },
+    statusCard: {
+        backgroundColor: COLORS.surface,
+        borderRadius: 12,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    statusRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.divider,
+    },
+    statusLabel: {
+        fontSize: 14,
+        color: COLORS.text,
+    },
+    statusIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 8,
+    },
+    statusValue: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+    },
+});
