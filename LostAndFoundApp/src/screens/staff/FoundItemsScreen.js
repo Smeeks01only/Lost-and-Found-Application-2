@@ -30,6 +30,7 @@ export default function FoundItemsScreen({ navigation }) {
         description: '',
         category: '',
         location_found: '',
+        date_found: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
         secret_question: '',
         secret_answer: '',
     });
@@ -71,6 +72,7 @@ export default function FoundItemsScreen({ navigation }) {
                 description: '',
                 category: '',
                 location_found: '',
+                date_found: new Date().toISOString().split('T')[0],
                 secret_question: '',
                 secret_answer: '',
             });
@@ -167,15 +169,15 @@ export default function FoundItemsScreen({ navigation }) {
                             <View style={styles.categoryGrid}>
                                 {CATEGORIES.map((cat) => (
                                     <TouchableOpacity
-                                        key={cat.id}
+                                        key={cat.value}
                                         style={[
                                             styles.categoryItem,
-                                            newItem.category === cat.id && styles.categoryItemSelected,
+                                            newItem.category === cat.value && styles.categoryItemSelected,
                                         ]}
-                                        onPress={() => setNewItem({ ...newItem, category: cat.id })}
+                                        onPress={() => setNewItem({ ...newItem, category: cat.value })}
                                     >
                                         <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                                        <Text style={styles.categoryName}>{cat.name}</Text>
+                                        <Text style={styles.categoryName}>{cat.label}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>

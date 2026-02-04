@@ -117,5 +117,6 @@ class FoundItemPublicSerializer(serializers.ModelSerializer):
         model = FoundItem
         fields = [
             'id', 'title', 'description', 'category', 'category_display',
-            'location_found', 'date_found', 'image', 'created_at'
+            'location_found', 'date_found', 'secret_question', 'image', 'created_at'
         ]
+

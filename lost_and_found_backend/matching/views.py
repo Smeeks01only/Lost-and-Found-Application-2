@@ -51,12 +51,26 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
         """Submit a claim for this match."""
         match = self.get_object()
         
-        # Validate match is claimable
-        if match.status != MatchStatus.POTENTIAL:
+        # Check for existing claim first
+        existing_claim = Claim.objects.filter(
+            match=match,
+            claimant=request.user
+        ).first()
+        
+        # Validate match is claimable (allow if POTENTIAL or if there's an existing claim with retries left)
+        if match.status != MatchStatus.POTENTIAL and match.status != MatchStatus.CLAIMED:
             return Response(
                 {'error': 'This match is no longer available for claiming'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # If match is CLAIMED, only allow if it's from the same user's pending claim
+        if match.status == MatchStatus.CLAIMED:
+            if not existing_claim or existing_claim.status != ClaimStatus.PENDING:
+                return Response(
+                    {'error': 'This match is no longer available for claiming'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         
         # Validate user owns the lost item
         if match.lost_item.user != request.user:
@@ -64,12 +78,6 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
                 {'error': 'You can only claim matches for your own lost items'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
-        # Check for existing claim
-        existing_claim = Claim.objects.filter(
-            match=match,
-            claimant=request.user
-        ).first()
         
         if existing_claim and existing_claim.attempt_count >= 3:
             return Response(
@@ -108,9 +116,10 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
                 claim.proof_image = serializer.validated_data['proof_image']
                 claim.save()
         
-        # Update match status
-        match.status = MatchStatus.CLAIMED
-        match.save()
+        # Only update match status to CLAIMED when there's an active claim
+        if match.status == MatchStatus.POTENTIAL:
+            match.status = MatchStatus.CLAIMED
+            match.save()
         
         response_data = {
             'claim_id': str(claim.id),
@@ -120,9 +129,9 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
         }
         
         if is_correct:
-            response_data['message'] = 'Secret answer correct! Claim submitted for admin review.'
+            response_data['message'] = 'Secret answer correct! Please proceed to the Lost & Found office to collect your item.'
         else:
-            response_data['message'] = 'Incorrect answer. Please try again or provide additional proof.'
+            response_data['message'] = 'Incorrect answer. Please try again.'
             response_data['attempts_remaining'] = 3 - claim.attempt_count
         
         return Response(response_data, status=status.HTTP_201_CREATED)

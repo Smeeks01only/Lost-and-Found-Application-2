@@ -91,15 +91,19 @@ export default function SubmitClaimScreen({ route, navigation }) {
                 {/* Match Info */}
                 <View style={styles.infoCard}>
                     <Text style={styles.infoTitle}>Found Item</Text>
-                    <Text style={styles.infoItemTitle}>{match?.found_item_title || 'Item'}</Text>
-                    <Text style={styles.infoLocation}>📍 {match?.found_item_location || 'Location'}</Text>
+                    <Text style={styles.infoItemTitle}>
+                        {match?.found_item?.title || match?.found_item_title || 'Item'}
+                    </Text>
+                    <Text style={styles.infoLocation}>
+                        📍 {match?.found_item?.location_found || match?.found_item_location || 'Location'}
+                    </Text>
                 </View>
 
                 {/* Secret Question */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Verification Question</Text>
                     <Text style={styles.questionText}>
-                        {match?.secret_question || 'What is a distinguishing feature of your item?'}
+                        {match?.found_item?.secret_question || 'What is a distinguishing feature of your item?'}
                     </Text>
 
                     <View style={styles.inputContainer}>

@@ -24,20 +24,24 @@ class MatchSerializer(serializers.ModelSerializer):
             'score_breakdown', 'rank', 'status', 'status_display',
             'has_secret_question', 'created_at', 'updated_at'
         ]
-        read_only_fields = '__all__'
+        read_only_fields = (
+            'id', 'lost_item', 'found_item',
+            'semantic_score', 'time_score', 'location_score', 'final_score',
+            'rank', 'status', 'created_at', 'updated_at'
+        )
     
     def get_score_breakdown(self, obj):
         """Get formatted score breakdown."""
         return {
-            'semantic': f"{obj.semantic_score:.1%}",
-            'time': f"{obj.time_score:.1%}",
-            'location': f"{obj.location_score:.1%}",
-            'final': f"{obj.final_score:.1%}",
+            'semantic': f"{(obj.semantic_score or 0):.1%}",
+            'time': f"{(obj.time_score or 0):.1%}",
+            'location': f"{(obj.location_score or 0):.1%}",
+            'final': f"{(obj.final_score or 0):.1%}",
         }
     
     def get_has_secret_question(self, obj):
         """Check if the found item has a secret question."""
-        return bool(obj.found_item.secret_question)
+        return bool(obj.found_item.secret_question) if obj.found_item else False
 
 
 class MatchListSerializer(serializers.ModelSerializer):
