@@ -16,6 +16,7 @@ import {
     Modal,
     ScrollView,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { itemsAPI } from '../../api';
 import { COLORS, STATUS_LABELS, CATEGORIES } from '../../constants';
@@ -85,22 +86,26 @@ export default function FoundItemsScreen({ navigation }) {
 
     const renderFoundItem = ({ item }) => {
         const statusInfo = STATUS_LABELS[item.status] || { label: item.status, color: '#6B7280', fadedBg: 'rgba(107, 114, 128, 0.15)' };
+        const categoryIcon = CATEGORIES.find(cat => cat.value === item.category)?.icon || 'package-variant';
 
         return (
             <TouchableOpacity style={styles.itemCard}>
                 <View style={styles.itemHeader}>
-                    <Text style={styles.itemTitle}>{item.title}</Text>
+                    <View style={styles.titleContainer}>
+                        <MaterialCommunityIcons name={categoryIcon} size={20} color={COLORS.primary} style={styles.itemIcon} />
+                        <Text style={styles.itemTitle}>{item.title}</Text>
+                    </View>
                     <View style={[styles.statusBadge, { backgroundColor: statusInfo.fadedBg }]}>
                         <Text style={[styles.statusText, { color: statusInfo.color }]}>
                             {statusInfo.label}
                         </Text>
                     </View>
                 </View>
-                <Text style={styles.itemCategory}>{item.category}</Text>
-                <Text style={styles.itemLocation}>📍 Found at: {item.location_found}</Text>
-                <Text style={styles.itemDate}>
-                    Found: {new Date(item.date_found).toLocaleDateString()}
-                </Text>
+                <Text style={styles.itemClassification}>{item.category} • {new Date(item.date_found).toLocaleDateString()}</Text>
+                <View style={styles.locationContainer}>
+                    <MaterialCommunityIcons name="map-marker-radius-outline" size={14} color={COLORS.textSecondary} />
+                    <Text style={styles.itemLocation}>{item.location_found}</Text>
+                </View>
             </TouchableOpacity>
         );
     };
@@ -113,7 +118,8 @@ export default function FoundItemsScreen({ navigation }) {
                     style={styles.addButton}
                     onPress={() => setShowCreateModal(true)}
                 >
-                    <Text style={styles.addButtonText}>+ Add</Text>
+                    <MaterialCommunityIcons name="plus" size={20} color="#fff" style={{ marginRight: 4 }} />
+                    <Text style={styles.addButtonText}>Add</Text>
                 </TouchableOpacity>
             </View>
 
@@ -127,7 +133,7 @@ export default function FoundItemsScreen({ navigation }) {
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyIcon}>📦</Text>
+                        <MaterialCommunityIcons name="package-variant-closed" size={48} color={COLORS.textLight} style={{ marginBottom: 16 }} />
                         <Text style={styles.emptyTitle}>No Found Items</Text>
                         <Text style={styles.emptySubtitle}>
                             Tap the + button to add a found item
@@ -176,8 +182,16 @@ export default function FoundItemsScreen({ navigation }) {
                                         ]}
                                         onPress={() => setNewItem({ ...newItem, category: cat.value })}
                                     >
-                                        <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                                        <Text style={styles.categoryName}>{cat.label}</Text>
+                                        <MaterialCommunityIcons
+                                            name={cat.icon}
+                                            size={16}
+                                            color={newItem.category === cat.value ? COLORS.primary : COLORS.text}
+                                            style={styles.categoryIcon}
+                                        />
+                                        <Text style={[
+                                            styles.categoryName,
+                                            newItem.category === cat.value && { color: COLORS.primary, fontWeight: '600' }
+                                        ]}>{cat.label}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -185,12 +199,15 @@ export default function FoundItemsScreen({ navigation }) {
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Location Found *</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={newItem.location_found}
-                                onChangeText={(text) => setNewItem({ ...newItem, location_found: text })}
-                                placeholder="Where was it found?"
-                            />
+                            <View style={styles.inputWithIcon}>
+                                <MaterialCommunityIcons name="map-marker-outline" size={20} color={COLORS.textSecondary} style={{ marginRight: 8 }} />
+                                <TextInput
+                                    style={styles.flexInput}
+                                    value={newItem.location_found}
+                                    onChangeText={(text) => setNewItem({ ...newItem, location_found: text })}
+                                    placeholder="Where was it found?"
+                                />
+                            </View>
                         </View>
 
                         <View style={styles.inputGroup}>
@@ -255,6 +272,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     addButtonText: {
         color: '#fff',
@@ -277,12 +296,20 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: 8,
     },
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 8,
+    },
+    itemIcon: {
+        marginRight: 8,
+    },
     itemTitle: {
         fontSize: 16,
         fontWeight: '600',
         color: COLORS.text,
         flex: 1,
-        marginRight: 8,
     },
     statusBadge: {
         paddingHorizontal: 8,
@@ -293,27 +320,23 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
     },
-    itemCategory: {
+    itemClassification: {
         fontSize: 14,
         color: COLORS.textSecondary,
         marginBottom: 4,
+    },
+    locationContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     itemLocation: {
         fontSize: 14,
         color: COLORS.textSecondary,
-        marginBottom: 4,
-    },
-    itemDate: {
-        fontSize: 12,
-        color: COLORS.textLight,
+        marginLeft: 4,
     },
     emptyContainer: {
         alignItems: 'center',
         paddingVertical: 60,
-    },
-    emptyIcon: {
-        fontSize: 48,
-        marginBottom: 16,
     },
     emptyTitle: {
         fontSize: 18,
@@ -374,6 +397,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.text,
     },
+    inputWithIcon: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+    },
+    flexInput: {
+        flex: 1,
+        paddingVertical: 16,
+        fontSize: 16,
+        color: COLORS.text,
+    },
     textArea: {
         height: 100,
         textAlignVertical: 'top',
@@ -398,7 +436,6 @@ const styles = StyleSheet.create({
         borderColor: COLORS.primary,
     },
     categoryIcon: {
-        fontSize: 16,
         marginRight: 4,
     },
     categoryName: {

@@ -14,6 +14,7 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants';
 
@@ -21,6 +22,7 @@ export default function LoginScreen({ navigation }) {
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -74,13 +76,25 @@ export default function LoginScreen({ navigation }) {
 
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Password</Text>
-                        <TextInput
-                            style={[styles.input, errors.password && styles.inputError]}
-                            placeholder="Enter your password"
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                        />
+                        <View style={styles.passwordContainer}>
+                            <TextInput
+                                style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
+                                placeholder="Enter your password"
+                                secureTextEntry={!isPasswordVisible}
+                                value={password}
+                                onChangeText={setPassword}
+                            />
+                            <TouchableOpacity
+                                style={styles.eyeIcon}
+                                onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+                            >
+                                <MaterialCommunityIcons
+                                    name={isPasswordVisible ? 'eye-off' : 'eye'}
+                                    size={24}
+                                    color={COLORS.textSecondary}
+                                />
+                            </TouchableOpacity>
+                        </View>
                         {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
                     </View>
 
@@ -152,6 +166,17 @@ const styles = StyleSheet.create({
         padding: 16,
         fontSize: 16,
         color: COLORS.text,
+    },
+    passwordContainer: {
+        position: 'relative',
+    },
+    passwordInput: {
+        paddingRight: 50,
+    },
+    eyeIcon: {
+        position: 'absolute',
+        right: 16,
+        top: 16,
     },
     inputError: {
         borderColor: COLORS.error,

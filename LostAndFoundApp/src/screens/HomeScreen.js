@@ -12,6 +12,7 @@ import {
     RefreshControl,
     ActivityIndicator,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { itemsAPI, matchesAPI, notificationsAPI } from '../api';
@@ -92,7 +93,7 @@ export default function HomeScreen({ navigation }) {
                     )}
                 </View>
                 <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Profile')}>
-                    <Text style={styles.profileIcon}>👤</Text>
+                    <MaterialCommunityIcons name="account" size={24} color="#fff" />
                 </TouchableOpacity>
             </View>
 
@@ -104,7 +105,7 @@ export default function HomeScreen({ navigation }) {
                 >
                     <Text style={styles.statNumber}>{stats.lostItems}</Text>
                     <Text style={styles.statLabel}>Lost Items</Text>
-                    <Text style={styles.statIcon}>📦</Text>
+                    <MaterialCommunityIcons name="bag-personal-outline" size={24} color={COLORS.textSecondary} style={styles.statIcon} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -113,7 +114,7 @@ export default function HomeScreen({ navigation }) {
                 >
                     <Text style={styles.statNumber}>{stats.matches}</Text>
                     <Text style={styles.statLabel}>Matches</Text>
-                    <Text style={styles.statIcon}>🔗</Text>
+                    <MaterialCommunityIcons name="magnify-scan" size={24} color={COLORS.textSecondary} style={styles.statIcon} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -122,7 +123,7 @@ export default function HomeScreen({ navigation }) {
                 >
                     <Text style={styles.statNumber}>{stats.claims}</Text>
                     <Text style={styles.statLabel}>Claims</Text>
-                    <Text style={styles.statIcon}>📋</Text>
+                    <MaterialCommunityIcons name="clipboard-check-outline" size={24} color={COLORS.textSecondary} style={styles.statIcon} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -131,7 +132,7 @@ export default function HomeScreen({ navigation }) {
                 >
                     <Text style={styles.statNumber}>{stats.unreadNotifications}</Text>
                     <Text style={styles.statLabel}>Notifications</Text>
-                    <Text style={styles.statIcon}>🔔</Text>
+                    <MaterialCommunityIcons name="bell-outline" size={24} color={COLORS.textSecondary} style={styles.statIcon} />
                 </TouchableOpacity>
             </View>
 
@@ -142,24 +143,28 @@ export default function HomeScreen({ navigation }) {
                     style={styles.actionButton}
                     onPress={() => navigation.navigate('ReportLostItem')}
                 >
-                    <Text style={styles.actionIcon}>➕</Text>
+                    <View style={styles.actionIconContainer}>
+                        <MaterialCommunityIcons name="plus" size={24} color={COLORS.primary} />
+                    </View>
                     <View style={styles.actionContent}>
                         <Text style={styles.actionTitle}>Report Lost Item</Text>
                         <Text style={styles.actionSubtitle}>Let us help you find it</Text>
                     </View>
-                    <Text style={styles.actionArrow}>→</Text>
+                    <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textSecondary} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => navigation.navigate('Matches')}
                 >
-                    <Text style={styles.actionIcon}>🔍</Text>
+                    <View style={styles.actionIconContainer}>
+                        <MaterialCommunityIcons name="magnify" size={24} color={COLORS.primary} />
+                    </View>
                     <View style={styles.actionContent}>
                         <Text style={styles.actionTitle}>Browse Found Items</Text>
                         <Text style={styles.actionSubtitle}>See items that match yours</Text>
                     </View>
-                    <Text style={styles.actionArrow}>→</Text>
+                    <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textSecondary} />
                 </TouchableOpacity>
             </View>
 
@@ -179,7 +184,9 @@ export default function HomeScreen({ navigation }) {
                             style={styles.itemCard}
                             onPress={() => navigation.navigate('ItemDetail', { id: item.id })}
                         >
-                            <Text style={styles.itemIcon}>📦</Text>
+                            <View style={styles.itemIconContainer}>
+                                <MaterialCommunityIcons name="bag-personal" size={24} color={COLORS.primary} />
+                            </View>
                             <View style={styles.itemContent}>
                                 <Text style={styles.itemTitle}>{item.title}</Text>
                                 <Text style={styles.itemLocation}>{item.location_lost}</Text>

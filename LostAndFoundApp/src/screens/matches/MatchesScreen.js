@@ -15,6 +15,7 @@ import {
     Animated,
     Easing,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { matchesAPI } from '../../api';
 import { COLORS, STATUS_LABELS } from '../../constants';
@@ -72,7 +73,10 @@ const AnimatedScore = ({ score }) => {
             <Text style={[styles.scoreText, { color: getScoreColor(displayScore) }]}>
                 {displayScore}%
             </Text>
-            <Text style={styles.nlpBadge}>🤖 AI Match</Text>
+            <View style={styles.nlpBadgeContainer}>
+                <MaterialCommunityIcons name="robot" size={12} color={COLORS.textSecondary} />
+                <Text style={styles.nlpBadge}> AI Match</Text>
+            </View>
         </Animated.View>
     );
 };
@@ -119,7 +123,7 @@ const MatchCard = ({ item, index, onPress, onClaim }) => {
                 {/* Semantic Match Indicators */}
                 <View style={styles.matchFactors}>
                     <View style={styles.factorItem}>
-                        <Text style={styles.factorIcon}>📝</Text>
+                        <MaterialCommunityIcons name="text-box-search-outline" size={20} color={COLORS.textSecondary} style={styles.factorIcon} />
                         <View style={styles.factorBar}>
                             <Animated.View
                                 style={[
@@ -131,7 +135,7 @@ const MatchCard = ({ item, index, onPress, onClaim }) => {
                         <Text style={styles.factorLabel}>Text</Text>
                     </View>
                     <View style={styles.factorItem}>
-                        <Text style={styles.factorIcon}>📂</Text>
+                        <MaterialCommunityIcons name="shape-outline" size={20} color={COLORS.textSecondary} style={styles.factorIcon} />
                         <View style={styles.factorBar}>
                             <Animated.View
                                 style={[
@@ -146,7 +150,7 @@ const MatchCard = ({ item, index, onPress, onClaim }) => {
                         <Text style={styles.factorLabel}>Category</Text>
                     </View>
                     <View style={styles.factorItem}>
-                        <Text style={styles.factorIcon}>📍</Text>
+                        <MaterialCommunityIcons name="map-marker-radius-outline" size={20} color={COLORS.textSecondary} style={styles.factorIcon} />
                         <View style={styles.factorBar}>
                             <Animated.View
                                 style={[
@@ -169,7 +173,7 @@ const MatchCard = ({ item, index, onPress, onClaim }) => {
                     </View>
 
                     <View style={styles.matchArrow}>
-                        <Text style={styles.arrowText}>↔</Text>
+                        <MaterialCommunityIcons name="arrow-left-right" size={20} color={COLORS.textLight} />
                     </View>
 
                     <View style={styles.itemInfo}>
@@ -251,7 +255,7 @@ const EmptyState = () => {
                     transform: [{ rotate: spin }, { scale: scaleAnim }],
                 }}
             >
-                <Text style={styles.emptyIcon}>🔍</Text>
+                <MaterialCommunityIcons name="magnify-scan" size={72} color={COLORS.textSecondary} style={{ marginBottom: 16 }} />
             </Animated.View>
             <Text style={styles.emptyTitle}>AI is Searching...</Text>
             <Text style={styles.emptyText}>
@@ -316,7 +320,10 @@ export default function MatchesScreen({ navigation }) {
         <View style={styles.container}>
             {/* Header with NLP badge */}
             <View style={styles.headerBanner}>
-                <Text style={styles.headerTitle}>🤖 AI-Powered Matches</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                    <MaterialCommunityIcons name="robot" size={24} color={COLORS.primary} style={{ marginRight: 8 }} />
+                    <Text style={styles.headerTitle}>AI-Powered Matches</Text>
+                </View>
                 <Text style={styles.headerSubtitle}>
                     Semantic matching using NLP technology
                 </Text>
@@ -411,10 +418,14 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
     },
+    nlpBadgeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 2,
+    },
     nlpBadge: {
         fontSize: 10,
         color: COLORS.textSecondary,
-        marginTop: 2,
     },
     matchFactors: {
         flexDirection: 'row',
@@ -429,7 +440,6 @@ const styles = StyleSheet.create({
         width: '30%',
     },
     factorIcon: {
-        fontSize: 16,
         marginBottom: 4,
     },
     factorBar: {
@@ -470,10 +480,6 @@ const styles = StyleSheet.create({
     matchArrow: {
         paddingHorizontal: 8,
     },
-    arrowText: {
-        fontSize: 20,
-        color: COLORS.textLight,
-    },
     matchFooter: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -502,10 +508,6 @@ const styles = StyleSheet.create({
     emptyContainer: {
         alignItems: 'center',
         padding: 40,
-    },
-    emptyIcon: {
-        fontSize: 72,
-        marginBottom: 16,
     },
     emptyTitle: {
         fontSize: 22,

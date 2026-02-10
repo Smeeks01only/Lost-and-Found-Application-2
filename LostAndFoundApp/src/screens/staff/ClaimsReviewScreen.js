@@ -15,6 +15,7 @@ import {
     Modal,
     TextInput,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { matchesAPI } from '../../api';
 import { COLORS, STATUS_LABELS } from '../../constants';
@@ -85,9 +86,12 @@ export default function ClaimsReviewScreen({ navigation }) {
                 onPress={() => handleReview(item)}
             >
                 <View style={styles.claimHeader}>
-                    <Text style={styles.claimTitle}>
-                        Claim #{item.id?.toString().slice(-6) || 'N/A'}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialCommunityIcons name="file-document-outline" size={20} color={COLORS.primary} style={{ marginRight: 8 }} />
+                        <Text style={styles.claimTitle}>
+                            Claim #{item.id?.toString().slice(-6) || 'N/A'}
+                        </Text>
+                    </View>
                     <View style={[styles.statusBadge, { backgroundColor: statusInfo.fadedBg }]}>
                         <Text style={[styles.statusText, { color: statusInfo.color }]}>
                             {statusInfo.label}
@@ -122,7 +126,8 @@ export default function ClaimsReviewScreen({ navigation }) {
                 </Text>
 
                 <View style={styles.reviewPrompt}>
-                    <Text style={styles.reviewPromptText}>Tap to review →</Text>
+                    <Text style={styles.reviewPromptText}>Tap to review</Text>
+                    <MaterialCommunityIcons name="arrow-right" size={16} color={COLORS.primary} />
                 </View>
             </TouchableOpacity>
         );
@@ -147,7 +152,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyIcon}>✅</Text>
+                        <MaterialCommunityIcons name="check-circle-outline" size={48} color={COLORS.success} style={{ marginBottom: 16 }} />
                         <Text style={styles.emptyTitle}>No Pending Claims</Text>
                         <Text style={styles.emptySubtitle}>
                             All claims have been reviewed
@@ -164,7 +169,10 @@ export default function ClaimsReviewScreen({ navigation }) {
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Review Claim</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 16 }}>
+                            <MaterialCommunityIcons name="clipboard-check-outline" size={24} color={COLORS.text} style={{ marginRight: 8 }} />
+                            <Text style={styles.modalTitle}>Review Claim</Text>
+                        </View>
 
                         {selectedClaim && (
                             <View style={styles.claimSummary}>
@@ -197,6 +205,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                                 style={[styles.actionButton, styles.rejectButton]}
                                 onPress={() => submitReview(false)}
                             >
+                                <MaterialCommunityIcons name="close" size={20} color={COLORS.error} style={{ marginRight: 4 }} />
                                 <Text style={styles.rejectButtonText}>Reject</Text>
                             </TouchableOpacity>
 
@@ -204,6 +213,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                                 style={[styles.actionButton, styles.approveButton]}
                                 onPress={() => submitReview(true)}
                             >
+                                <MaterialCommunityIcons name="check" size={20} color="#fff" style={{ marginRight: 4 }} />
                                 <Text style={styles.approveButtonText}>Approve</Text>
                             </TouchableOpacity>
                         </View>
@@ -310,20 +320,19 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         borderTopWidth: 1,
         borderTopColor: COLORS.divider,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     reviewPromptText: {
         fontSize: 14,
         color: COLORS.primary,
         fontWeight: '500',
-        textAlign: 'center',
+        marginRight: 4,
     },
     emptyContainer: {
         alignItems: 'center',
         paddingVertical: 60,
-    },
-    emptyIcon: {
-        fontSize: 48,
-        marginBottom: 16,
     },
     emptyTitle: {
         fontSize: 18,
@@ -351,8 +360,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: 'bold',
         color: COLORS.text,
-        marginBottom: 16,
-        textAlign: 'center',
     },
     claimSummary: {
         backgroundColor: COLORS.background,
@@ -388,6 +395,8 @@ const styles = StyleSheet.create({
         padding: 14,
         borderRadius: 12,
         alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     rejectButton: {
         backgroundColor: COLORS.errorFaded,

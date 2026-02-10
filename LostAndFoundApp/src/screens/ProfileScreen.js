@@ -11,6 +11,7 @@ import {
     Alert,
     ScrollView,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants';
 
@@ -65,21 +66,21 @@ export default function ProfileScreen({ navigation }) {
                     <Text style={styles.sectionTitle}>Account</Text>
 
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>✏️</Text>
+                        <MaterialCommunityIcons name="pencil-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
                         <Text style={styles.menuText}>Edit Profile</Text>
-                        <Text style={styles.menuArrow}>→</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🔒</Text>
+                        <MaterialCommunityIcons name="lock-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
                         <Text style={styles.menuText}>Change Password</Text>
-                        <Text style={styles.menuArrow}>→</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>🔔</Text>
+                        <MaterialCommunityIcons name="bell-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
                         <Text style={styles.menuText}>Notification Settings</Text>
-                        <Text style={styles.menuArrow}>→</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
                     </TouchableOpacity>
                 </View>
 
@@ -87,26 +88,27 @@ export default function ProfileScreen({ navigation }) {
                     <Text style={styles.sectionTitle}>Support</Text>
 
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>❓</Text>
+                        <MaterialCommunityIcons name="help-circle-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
                         <Text style={styles.menuText}>Help & FAQ</Text>
-                        <Text style={styles.menuArrow}>→</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>📞</Text>
+                        <MaterialCommunityIcons name="phone-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
                         <Text style={styles.menuText}>Contact Us</Text>
-                        <Text style={styles.menuArrow}>→</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.menuItem}>
-                        <Text style={styles.menuIcon}>📋</Text>
+                        <MaterialCommunityIcons name="file-document-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
                         <Text style={styles.menuText}>Terms of Service</Text>
-                        <Text style={styles.menuArrow}>→</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
                     </TouchableOpacity>
                 </View>
 
                 {/* Logout Button */}
                 <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <MaterialCommunityIcons name="logout" size={24} color={COLORS.error} style={{ marginRight: 8 }} />
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
@@ -181,7 +183,6 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     menuIcon: {
-        fontSize: 20,
         marginRight: 12,
     },
     menuText: {
@@ -199,6 +200,8 @@ const styles = StyleSheet.create({
         padding: 16,
         alignItems: 'center',
         marginTop: 16,
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
     logoutText: {
         color: COLORS.error,

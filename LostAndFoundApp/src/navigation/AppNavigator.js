@@ -8,6 +8,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants';
@@ -39,9 +40,9 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Tab Bar Icon Component
-const TabIcon = ({ icon, focused }) => (
+const TabIcon = ({ icon, focused, color }) => (
     <View style={[styles.tabIcon, focused && styles.tabIconFocused]}>
-        <Text style={{ fontSize: 24 }}>{icon}</Text>
+        <MaterialCommunityIcons name={icon} size={24} color={color} />
     </View>
 );
 
@@ -62,7 +63,8 @@ function LoserTabs() {
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="home-outline" focused={focused} color={color} />,
+                    tabBarActiveIcon: ({ focused, color }) => <TabIcon icon="home" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
@@ -70,21 +72,21 @@ function LoserTabs() {
                 component={LostItemsScreen}
                 options={{
                     tabBarLabel: 'My Items',
-                    tabBarIcon: ({ focused }) => <TabIcon icon="📦" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="bag-personal-outline" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
                 name="Matches"
                 component={MatchesScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="🔗" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="magnify-scan" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="account-circle-outline" focused={focused} color={color} />,
                 }}
             />
         </Tab.Navigator>
@@ -108,7 +110,7 @@ function StaffTabs() {
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="🏠" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="home-outline" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
@@ -116,7 +118,7 @@ function StaffTabs() {
                 component={FoundItemsScreen}
                 options={{
                     tabBarLabel: 'Found Items',
-                    tabBarIcon: ({ focused }) => <TabIcon icon="📦" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="bag-checked" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
@@ -124,14 +126,14 @@ function StaffTabs() {
                 component={ClaimsReviewScreen}
                 options={{
                     tabBarLabel: 'Claims',
-                    tabBarIcon: ({ focused }) => <TabIcon icon="📋" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="clipboard-check-outline" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="account-circle-outline" focused={focused} color={color} />,
                 }}
             />
         </Tab.Navigator>
@@ -155,7 +157,7 @@ function AdminTabs() {
                 name="Dashboard"
                 component={AdminDashboardScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="📊" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="view-dashboard-outline" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
@@ -163,7 +165,7 @@ function AdminTabs() {
                 component={FoundItemsScreen}
                 options={{
                     tabBarLabel: 'Found Items',
-                    tabBarIcon: ({ focused }) => <TabIcon icon="📦" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="bag-checked" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
@@ -171,14 +173,14 @@ function AdminTabs() {
                 component={ClaimsReviewScreen}
                 options={{
                     tabBarLabel: 'Claims',
-                    tabBarIcon: ({ focused }) => <TabIcon icon="📋" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="clipboard-text-outline" focused={focused} color={color} />,
                 }}
             />
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
                 options={{
-                    tabBarIcon: ({ focused }) => <TabIcon icon="👤" focused={focused} />,
+                    tabBarIcon: ({ focused, color }) => <TabIcon icon="account-circle-outline" focused={focused} color={color} />,
                 }}
             />
         </Tab.Navigator>

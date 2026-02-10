@@ -13,6 +13,7 @@ import {
     RefreshControl,
     Alert,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { itemsAPI, matchesAPI } from '../../api';
 import { COLORS } from '../../constants';
@@ -67,7 +68,7 @@ export default function AdminDashboardScreen({ navigation }) {
             onPress={onPress}
             disabled={!onPress}
         >
-            <Text style={styles.statIcon}>{icon}</Text>
+            <MaterialCommunityIcons name={icon} size={28} color={color} style={styles.statIcon} />
             <View style={styles.statContent}>
                 <Text style={styles.statValue}>{value}</Text>
                 <Text style={styles.statTitle}>{title}</Text>
@@ -77,12 +78,12 @@ export default function AdminDashboardScreen({ navigation }) {
 
     const ActionCard = ({ icon, title, subtitle, onPress }) => (
         <TouchableOpacity style={styles.actionCard} onPress={onPress}>
-            <Text style={styles.actionIcon}>{icon}</Text>
+            <MaterialCommunityIcons name={icon} size={24} color={COLORS.primary} style={styles.actionIcon} />
             <View style={styles.actionContent}>
                 <Text style={styles.actionTitle}>{title}</Text>
                 <Text style={styles.actionSubtitle}>{subtitle}</Text>
             </View>
-            <Text style={styles.actionArrow}>→</Text>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textSecondary} />
         </TouchableOpacity>
     );
 
@@ -106,25 +107,25 @@ export default function AdminDashboardScreen({ navigation }) {
                     <Text style={styles.sectionTitle}>System Overview</Text>
                     <View style={styles.statsGrid}>
                         <StatCard
-                            icon="📦"
+                            icon="bag-personal-outline"
                             title="Lost Items"
                             value={stats.totalLostItems}
                             color={COLORS.primary}
                         />
                         <StatCard
-                            icon="✅"
+                            icon="package-variant-closed"
                             title="Found Items"
                             value={stats.totalFoundItems}
                             color={COLORS.success}
                         />
                         <StatCard
-                            icon="🔗"
+                            icon="magnify-scan"
                             title="Matches"
                             value={stats.totalMatches}
                             color="#8B5CF6"
                         />
                         <StatCard
-                            icon="⏳"
+                            icon="file-document-outline"
                             title="Pending Claims"
                             value={stats.pendingClaims}
                             color={COLORS.warning}
@@ -136,19 +137,19 @@ export default function AdminDashboardScreen({ navigation }) {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Quick Actions</Text>
                     <ActionCard
-                        icon="📋"
+                        icon="clipboard-check-outline"
                         title="Review Claims"
                         subtitle="Process pending ownership claims"
                         onPress={() => navigation.navigate('ClaimsReview')}
                     />
                     <ActionCard
-                        icon="📦"
+                        icon="package-variant"
                         title="Manage Found Items"
                         subtitle="Add or update found items"
                         onPress={() => navigation.navigate('FoundItems')}
                     />
                     <ActionCard
-                        icon="🔄"
+                        icon="refresh"
                         title="Run Matching Algorithm"
                         subtitle="Trigger NLP-based item matching"
                         onPress={() => Alert.alert(
@@ -253,7 +254,6 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
     },
     statIcon: {
-        fontSize: 28,
         marginRight: 12,
     },
     statContent: {
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border,
     },
     actionIcon: {
-        fontSize: 24,
         marginRight: 12,
     },
     actionContent: {
@@ -292,10 +291,6 @@ const styles = StyleSheet.create({
     },
     actionSubtitle: {
         fontSize: 14,
-        color: COLORS.textSecondary,
-    },
-    actionArrow: {
-        fontSize: 18,
         color: COLORS.textSecondary,
     },
     statusCard: {

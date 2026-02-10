@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 // Base URL for the backend API
 const getBaseUrl = () => {
     if (Platform.OS === 'web') return 'http://localhost:8000/api/v1';
-    if (Platform.OS === 'android') return 'http://192.168.1.102:8000/api/v1'; // Physical device IP
+    if (Platform.OS === 'android') return 'http://192.168.1.101:8000/api/v1'; // Physical device IP
     // if (Platform.OS === 'android') return 'http://10.0.2.2:8000/api/v1'; // Emulator default
 
     return 'http://localhost:8000/api/v1'; // iOS Simulator default
@@ -75,21 +75,21 @@ export const COLORS = {
 
 // Item Categories
 export const CATEGORIES = [
-    { value: 'BAG', label: 'Bag/Backpack', icon: '🎒' },
-    { value: 'PHONE', label: 'Phone/Mobile Device', icon: '📱' },
-    { value: 'WALLET', label: 'Wallet/Purse', icon: '👛' },
-    { value: 'KEYS', label: 'Keys', icon: '🔑' },
-    { value: 'LAPTOP', label: 'Laptop/Computer', icon: '💻' },
-    { value: 'CLOTHING', label: 'Clothing', icon: '👕' },
-    { value: 'JEWELRY', label: 'Jewelry/Watch', icon: '💍' },
-    { value: 'DOCUMENTS', label: 'Documents/ID', icon: '📄' },
-    { value: 'ELECTRONICS', label: 'Electronics', icon: '🔌' },
-    { value: 'GLASSES', label: 'Glasses/Sunglasses', icon: '👓' },
-    { value: 'HEADPHONES', label: 'Headphones/Earbuds', icon: '🎧' },
-    { value: 'UMBRELLA', label: 'Umbrella', icon: '☂️' },
-    { value: 'BOOKS', label: 'Books/Stationery', icon: '📚' },
-    { value: 'SPORTS', label: 'Sports Equipment', icon: '⚽' },
-    { value: 'OTHER', label: 'Other', icon: '📦' },
+    { value: 'BAG', label: 'Bag/Backpack', icon: 'bag-personal' },
+    { value: 'PHONE', label: 'Phone/Mobile Device', icon: 'cellphone' },
+    { value: 'WALLET', label: 'Wallet/Purse', icon: 'wallet' },
+    { value: 'KEYS', label: 'Keys', icon: 'key' },
+    { value: 'LAPTOP', label: 'Laptop/Computer', icon: 'laptop' },
+    { value: 'CLOTHING', label: 'Clothing', icon: 'tshirt-crew' },
+    { value: 'JEWELRY', label: 'Jewelry/Watch', icon: 'watch' },
+    { value: 'DOCUMENTS', label: 'Documents/ID', icon: 'file-document' },
+    { value: 'ELECTRONICS', label: 'Electronics', icon: 'power-plug' },
+    { value: 'GLASSES', label: 'Glasses/Sunglasses', icon: 'glasses' },
+    { value: 'HEADPHONES', label: 'Headphones/Earbuds', icon: 'headphones' },
+    { value: 'UMBRELLA', label: 'Umbrella', icon: 'umbrella' },
+    { value: 'BOOKS', label: 'Books/Stationery', icon: 'book-open-variant' },
+    { value: 'SPORTS', label: 'Sports Equipment', icon: 'soccer' },
+    { value: 'OTHER', label: 'Other', icon: 'package-variant' },
 ];
 
 // Status Labels with pre-computed faded backgrounds
