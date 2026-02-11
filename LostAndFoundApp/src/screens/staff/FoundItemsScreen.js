@@ -19,9 +19,11 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { itemsAPI } from '../../api';
-import { COLORS, STATUS_LABELS, CATEGORIES } from '../../constants';
+import { STATUS_LABELS, CATEGORIES, COLORS } from '../../constants';
+// import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function FoundItemsScreen({ navigation }) {
+    // const { theme } = useTheme(); // Removed
     const [foundItems, setFoundItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -85,7 +87,7 @@ export default function FoundItemsScreen({ navigation }) {
     };
 
     const renderFoundItem = ({ item }) => {
-        const statusInfo = STATUS_LABELS[item.status] || { label: item.status, color: '#6B7280', fadedBg: 'rgba(107, 114, 128, 0.15)' };
+        const statusInfo = STATUS_LABELS[item.status] || { label: item.status, color: COLORS.textSecondary, fadedBg: COLORS.grayFaded };
         const categoryIcon = CATEGORIES.find(cat => cat.value === item.category)?.icon || 'package-variant';
 
         return (
@@ -95,8 +97,8 @@ export default function FoundItemsScreen({ navigation }) {
                         <MaterialCommunityIcons name={categoryIcon} size={20} color={COLORS.primary} style={styles.itemIcon} />
                         <Text style={styles.itemTitle}>{item.title}</Text>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.fadedBg }]}>
-                        <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.color + '25' || COLORS.grayFaded }]}>
+                        <Text style={[styles.statusText, { color: statusInfo.color || COLORS.textSecondary }]}>
                             {statusInfo.label}
                         </Text>
                     </View>
@@ -129,7 +131,7 @@ export default function FoundItemsScreen({ navigation }) {
                 keyExtractor={(item) => item.id.toString()}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
-                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
@@ -147,6 +149,7 @@ export default function FoundItemsScreen({ navigation }) {
                 visible={showCreateModal}
                 animationType="slide"
                 presentationStyle="pageSheet"
+                onRequestClose={() => setShowCreateModal(false)}
             >
                 <SafeAreaView style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
@@ -167,6 +170,7 @@ export default function FoundItemsScreen({ navigation }) {
                                 value={newItem.title}
                                 onChangeText={(text) => setNewItem({ ...newItem, title: text })}
                                 placeholder="What was found?"
+                                placeholderTextColor={COLORS.textLight}
                             />
                         </View>
 
@@ -206,6 +210,7 @@ export default function FoundItemsScreen({ navigation }) {
                                     value={newItem.location_found}
                                     onChangeText={(text) => setNewItem({ ...newItem, location_found: text })}
                                     placeholder="Where was it found?"
+                                    placeholderTextColor={COLORS.textLight}
                                 />
                             </View>
                         </View>
@@ -217,6 +222,7 @@ export default function FoundItemsScreen({ navigation }) {
                                 value={newItem.description}
                                 onChangeText={(text) => setNewItem({ ...newItem, description: text })}
                                 placeholder="Describe the item..."
+                                placeholderTextColor={COLORS.textLight}
                                 multiline
                                 numberOfLines={4}
                             />
@@ -229,6 +235,7 @@ export default function FoundItemsScreen({ navigation }) {
                                 value={newItem.secret_question}
                                 onChangeText={(text) => setNewItem({ ...newItem, secret_question: text })}
                                 placeholder="Question only the owner can answer"
+                                placeholderTextColor={COLORS.textLight}
                             />
                         </View>
 
@@ -239,6 +246,7 @@ export default function FoundItemsScreen({ navigation }) {
                                 value={newItem.secret_answer}
                                 onChangeText={(text) => setNewItem({ ...newItem, secret_answer: text })}
                                 placeholder="Expected answer"
+                                placeholderTextColor={COLORS.textLight}
                             />
                         </View>
                     </ScrollView>
@@ -289,6 +297,11 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         borderWidth: 1,
         borderColor: COLORS.border,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
     },
     itemHeader: {
         flexDirection: 'row',

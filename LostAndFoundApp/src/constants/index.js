@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 // Base URL for the backend API
 const getBaseUrl = () => {
     if (Platform.OS === 'web') return 'http://localhost:8000/api/v1';
-    if (Platform.OS === 'android') return 'http://192.168.1.101:8000/api/v1'; // Physical device IP
+    if (Platform.OS === 'android') return 'http://192.168.1.103:8000/api/v1'; // Physical device IP
     // if (Platform.OS === 'android') return 'http://10.0.2.2:8000/api/v1'; // Emulator default
 
     return 'http://localhost:8000/api/v1'; // iOS Simulator default
@@ -45,32 +45,36 @@ export const ENDPOINTS = {
 
 // App Colors
 export const COLORS = {
-    primary: '#4F46E5',      // Indigo
-    primaryDark: '#3730A3',
-    primaryLight: '#818CF8',
-    primaryFaded: 'rgba(79, 70, 229, 0.1)',
-    secondary: '#10B981',    // Emerald
-    secondaryDark: '#059669',
-    background: '#F9FAFB',
-    surface: '#FFFFFF',
-    error: '#EF4444',
-    errorFaded: 'rgba(239, 68, 68, 0.1)',
-    warning: '#F59E0B',
-    warningFaded: 'rgba(245, 158, 11, 0.2)',
-    success: '#10B981',
-    successFaded: 'rgba(16, 185, 129, 0.2)',
-    text: '#1F2937',
-    textSecondary: '#6B7280',
-    textLight: '#9CA3AF',
-    border: '#E5E7EB',
-    divider: '#F3F4F6',
-    // Status badge backgrounds
+    primary: '#4F46E5',    // Indigo 600
+     // Indigo 700
+    primaryLight: '#818CF8', // Indigo 400
+    primaryFaded: 'rgba(79, 70, 229, 0.1)', // Indigo 600 with opacity
+    secondary: '#10B981',   // Emerald 500
+    secondaryDark: '#059669', // Emerald 600
+    background: '#F9FAFB',  // Gray 50
+    surface: '#FFFFFF',     // White
+    error: '#EF4444',       // Red 500
+    warning: '#F59E0B',     // Amber 500
+    warningFaded: 'rgba(245, 158, 11, 0.1)',
+    success: '#10B981',     // Emerald 500
+    successFaded: 'rgba(16, 185, 129, 0.1)',
+    text: '#1F2937',        // Gray 800
+    textSecondary: '#6B7280', // Gray 500
+    textLight: '#9CA3AF',   // Gray 400
+    border: '#E5E7EB',      // Gray 200
+    divider: '#F3F4F6',     // Gray 100
+    // Status badge backgrounds (keep RGBA for transparency)
     blueFaded: 'rgba(59, 130, 246, 0.15)',
     greenFaded: 'rgba(16, 185, 129, 0.15)',
     purpleFaded: 'rgba(139, 92, 246, 0.15)',
     grayFaded: 'rgba(107, 114, 128, 0.15)',
     yellowFaded: 'rgba(245, 158, 11, 0.15)',
     redFaded: 'rgba(239, 68, 68, 0.15)',
+    // Card backgrounds
+    cardBlue: '#EEF2FF',
+    cardGreen: '#ECFDF5',
+    cardYellow: '#FEF3C7',
+    cardRed: '#FEE2E2',
 };
 
 // Item Categories

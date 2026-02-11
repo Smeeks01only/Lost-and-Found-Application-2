@@ -10,8 +10,10 @@ import {
     TouchableOpacity,
     Alert,
     ScrollView,
+    Image,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants';
 
@@ -29,189 +31,262 @@ export default function ProfileScreen({ navigation }) {
         );
     };
 
-    const getRoleBadge = (role) => {
-        switch (role) {
-            case 'ADMIN':
-                return { label: 'Admin', color: '#8B5CF6' };
-            case 'STAFF':
-                return { label: 'Staff', color: '#10B981' };
-            default:
-                return { label: 'User', color: '#3B82F6' };
-        }
-    };
-
-    const roleBadge = getRoleBadge(user?.role);
+    const MenuOption = ({ icon, title, subtitle, onPress, showBorder = true, isDestructive = false }) => (
+        <TouchableOpacity
+            style={styles.menuItem}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <View style={[styles.menuIconContainer, { backgroundColor: isDestructive ? COLORS.errorFaded : COLORS.background }]}>
+                <MaterialCommunityIcons name={icon} size={22} color={isDestructive ? COLORS.error : COLORS.textSecondary} />
+            </View>
+            <View style={[styles.menuContent, showBorder && styles.menuBorder]}>
+                <View style={styles.menuTextContainer}>
+                    <Text style={[styles.menuTitle, isDestructive && { color: COLORS.error }]}>{title}</Text>
+                    {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={COLORS.textLight} />
+            </View>
+        </TouchableOpacity>
+    );
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.content}>
-                {/* Profile Header */}
-                <View style={styles.header}>
-                    <View style={styles.avatarContainer}>
-                        <Text style={styles.avatarText}>
-                            {user?.full_name?.charAt(0)?.toUpperCase() || '?'}
-                        </Text>
-                    </View>
-                    <Text style={styles.name}>{user?.full_name || 'User'}</Text>
-                    <Text style={styles.email}>{user?.email}</Text>
-                    <View style={[styles.roleBadge, { backgroundColor: COLORS.primaryFaded }]}>
-                        <Text style={[styles.roleText, { color: roleBadge.color }]}>
-                            {roleBadge.label}
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Profile Options */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Account</Text>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialCommunityIcons name="pencil-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Edit Profile</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialCommunityIcons name="lock-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Change Password</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialCommunityIcons name="bell-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Notification Settings</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Support</Text>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialCommunityIcons name="help-circle-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Help & FAQ</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialCommunityIcons name="phone-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Contact Us</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.menuItem}>
-                        <MaterialCommunityIcons name="file-document-outline" size={24} color={COLORS.textSecondary} style={styles.menuIcon} />
-                        <Text style={styles.menuText}>Terms of Service</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={24} color={COLORS.textLight} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Logout Button */}
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <MaterialCommunityIcons name="logout" size={24} color={COLORS.error} style={{ marginRight: 8 }} />
-                    <Text style={styles.logoutText}>Logout</Text>
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Profile</Text>
+                <TouchableOpacity style={styles.headerIcon}>
+                    <MaterialCommunityIcons name="dots-horizontal" size={24} color={COLORS.text} />
                 </TouchableOpacity>
-
-                <Text style={styles.version}>Version 1.0.0</Text>
             </View>
-        </ScrollView>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                {/* User Card */}
+                <View style={styles.userCard}>
+                    <View style={styles.avatarContainer}>
+                        {user?.avatar ? (
+                            <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+                        ) : (
+                            <Text style={styles.avatarText}>
+                                {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                            </Text>
+                        )}
+                    </View>
+                    <View style={styles.userInfo}>
+                        <Text style={styles.userName}>{user?.full_name || 'User Name'}</Text>
+                        <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.editButton}>
+                        <MaterialCommunityIcons name="pencil-outline" size={20} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Section 1: Dashboard */}
+                <View style={styles.sectionCard}>
+                    <MenuOption
+                        icon="file-document-outline"
+                        title="My Reports"
+                        subtitle="View lost items you reported"
+                        onPress={() => navigation.navigate('MyLostItems')}
+                    />
+                    <MenuOption
+                        icon="hand-heart-outline"
+                        title="My Finds"
+                        subtitle="Items you have found"
+                        onPress={() => navigation.navigate('MyFoundItems')}
+                    />
+                    <MenuOption
+                        icon="star-outline"
+                        title="Matches"
+                        subtitle="Potential matches for your items"
+                        onPress={() => navigation.navigate('Matches')}
+                        showBorder={false}
+                    />
+                </View>
+
+                {/* Section 2: Account Settings */}
+                <View style={styles.sectionCard}>
+                    <MenuOption
+                        icon="account-cog-outline"
+                        title="Edit Profile"
+                    />
+                    <MenuOption
+                        icon="bell-outline"
+                        title="Notifications"
+                    />
+                    <MenuOption
+                        icon="translate"
+                        title="Language"
+                        subtitle="English"
+                        showBorder={false}
+                    />
+                </View>
+
+                {/* Section 3: Support */}
+                <View style={styles.sectionCard}>
+                    <MenuOption
+                        icon="help-circle-outline"
+                        title="Get Help"
+                    />
+                    <MenuOption
+                        icon="shield-check-outline"
+                        title="Privacy Policy"
+                    />
+                    <MenuOption
+                        icon="file-document-outline"
+                        title="Terms & Conditions"
+                        showBorder={false}
+                    />
+                </View>
+
+                {/* Logout */}
+                <View style={styles.sectionCard}>
+                    <MenuOption
+                        icon="logout"
+                        title="Log Out"
+                        isDestructive={true}
+                        onPress={handleLogout}
+                        showBorder={false}
+                    />
+                </View>
+
+                <Text style={styles.versionText}>Version 1.0.2</Text>
+
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
-    },
-    content: {
-        padding: 16,
+        backgroundColor: '#F3F4F6', // Light Gray background as per reference
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 32,
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+    },
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#1F2937',
+    },
+    headerIcon: {
+        padding: 8,
+        backgroundColor: '#fff',
+        borderRadius: 20,
+    },
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+    },
+    // User Card
+    userCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 16,
+        marginBottom: 24,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     avatarContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: COLORS.primary,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: COLORS.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 16,
+        marginRight: 16,
     },
     avatarText: {
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#fff',
     },
-    name: {
-        fontSize: 24,
+    avatarImage: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+    },
+    userInfo: {
+        flex: 1,
+    },
+    userName: {
+        fontSize: 18,
         fontWeight: 'bold',
-        color: COLORS.text,
+        color: '#1F2937',
         marginBottom: 4,
     },
-    email: {
-        fontSize: 16,
-        color: COLORS.textSecondary,
-        marginBottom: 12,
-    },
-    roleBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-    },
-    roleText: {
+    userEmail: {
         fontSize: 14,
-        fontWeight: '500',
+        color: '#6B7280',
     },
-    section: {
-        marginBottom: 24,
+    editButton: {
+        padding: 8,
     },
-    sectionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: COLORS.textSecondary,
-        marginBottom: 12,
-        textTransform: 'uppercase',
+    // Section Cards
+    sectionCard: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.surface,
-        padding: 16,
+        paddingVertical: 12,
+    },
+    menuIconContainer: {
+        width: 40,
+        height: 40,
         borderRadius: 12,
-        marginBottom: 8,
-    },
-    menuIcon: {
-        marginRight: 12,
-    },
-    menuText: {
-        flex: 1,
-        fontSize: 16,
-        color: COLORS.text,
-    },
-    menuArrow: {
-        fontSize: 16,
-        color: COLORS.textLight,
-    },
-    logoutButton: {
-        backgroundColor: COLORS.errorFaded,
-        borderRadius: 12,
-        padding: 16,
-        alignItems: 'center',
-        marginTop: 16,
-        flexDirection: 'row',
         justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
     },
-    logoutText: {
-        color: COLORS.error,
+    menuContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 4,
+    },
+    menuBorder: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+        paddingBottom: 16,
+        marginBottom: 4,
+    },
+    menuTextContainer: {
+        flex: 1,
+    },
+    menuTitle: {
         fontSize: 16,
         fontWeight: '600',
+        color: '#1F2937',
     },
-    version: {
+    menuSubtitle: {
+        fontSize: 12,
+        color: '#9CA3AF',
+        marginTop: 2,
+    },
+    versionText: {
         textAlign: 'center',
-        color: COLORS.textLight,
-        fontSize: 14,
-        marginTop: 24,
+        color: '#9CA3AF',
+        fontSize: 12,
+        marginTop: 8,
     },
 });

@@ -20,14 +20,16 @@ import { useAuth } from '../../context/AuthContext';
 import { COLORS } from '../../constants';
 
 export default function RegisterScreen({ navigation }) {
-    const { register, login } = useAuth();
+    const { register } = useAuth();
+
     const [formData, setFormData] = useState({
-        email: '',
         full_name: '',
+        email: '',
         phone_number: '',
         password: '',
         password_confirm: '',
     });
+
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -72,11 +74,10 @@ export default function RegisterScreen({ navigation }) {
                 [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
             );
         } else {
-            // Handle validation errors from API
             if (typeof result.errors === 'object') {
                 setErrors(result.errors);
             } else {
-                Alert.alert('Registration Failed', 'Please try again');
+                Alert.alert('Registration Failed', result.message || 'Please try again');
             }
         }
 
@@ -98,57 +99,63 @@ export default function RegisterScreen({ navigation }) {
 
                     {/* Form */}
                     <View style={styles.form}>
+                        {/* Full Name */}
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Full Name</Text>
                             <TextInput
                                 style={[styles.input, errors.full_name && styles.inputError]}
                                 placeholder="Enter your full name"
+                                placeholderTextColor={COLORS.textLight}
                                 value={formData.full_name}
                                 onChangeText={(v) => updateField('full_name', v)}
                             />
                             {errors.full_name && <Text style={styles.errorText}>{errors.full_name}</Text>}
                         </View>
 
+                        {/* Email */}
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Email</Text>
                             <TextInput
                                 style={[styles.input, errors.email && styles.inputError]}
                                 placeholder="Enter your email"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
+                                placeholderTextColor={COLORS.textLight}
                                 value={formData.email}
                                 onChangeText={(v) => updateField('email', v)}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
                             />
                             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                         </View>
 
+                        {/* Phone Number */}
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Phone Number (Optional)</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, errors.phone_number && styles.inputError]}
                                 placeholder="Enter your phone number"
-                                keyboardType="phone-pad"
+                                placeholderTextColor={COLORS.textLight}
                                 value={formData.phone_number}
                                 onChangeText={(v) => updateField('phone_number', v)}
+                                keyboardType="phone-pad"
                             />
+                            {errors.phone_number && <Text style={styles.errorText}>{errors.phone_number}</Text>}
                         </View>
 
+                        {/* Password */}
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Password</Text>
-                            <View style={styles.passwordContainer}>
+                            <View style={[styles.passwordContainer, errors.password && styles.inputError]}>
                                 <TextInput
-                                    style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
+                                    style={styles.passwordInput}
                                     placeholder="Create a password"
-                                    secureTextEntry={!isPasswordVisible}
+                                    placeholderTextColor={COLORS.textLight}
                                     value={formData.password}
                                     onChangeText={(v) => updateField('password', v)}
+                                    secureTextEntry={!isPasswordVisible}
                                 />
-                                <TouchableOpacity
-                                    style={styles.eyeIcon}
-                                    onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-                                >
+                                <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
                                     <MaterialCommunityIcons
-                                        name={isPasswordVisible ? 'eye-off' : 'eye'}
+                                        name={isPasswordVisible ? "eye-off" : "eye"}
                                         size={24}
                                         color={COLORS.textSecondary}
                                     />
@@ -157,51 +164,50 @@ export default function RegisterScreen({ navigation }) {
                             {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
                         </View>
 
+                        {/* Confirm Password */}
                         <View style={styles.inputContainer}>
                             <Text style={styles.label}>Confirm Password</Text>
-                            <View style={styles.passwordContainer}>
+                            <View style={[styles.passwordContainer, errors.password_confirm && styles.inputError]}>
                                 <TextInput
-                                    style={[styles.input, styles.passwordInput, errors.password_confirm && styles.inputError]}
+                                    style={styles.passwordInput}
                                     placeholder="Confirm your password"
-                                    secureTextEntry={!isConfirmPasswordVisible}
+                                    placeholderTextColor={COLORS.textLight}
                                     value={formData.password_confirm}
                                     onChangeText={(v) => updateField('password_confirm', v)}
+                                    secureTextEntry={!isConfirmPasswordVisible}
+                                    autoCapitalize="none"
                                 />
-                                <TouchableOpacity
-                                    style={styles.eyeIcon}
-                                    onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}
-                                >
+                                <TouchableOpacity onPress={() => setIsConfirmPasswordVisible(!isConfirmPasswordVisible)}>
                                     <MaterialCommunityIcons
-                                        name={isConfirmPasswordVisible ? 'eye-off' : 'eye'}
+                                        name={isConfirmPasswordVisible ? "eye-off" : "eye"}
                                         size={24}
                                         color={COLORS.textSecondary}
                                     />
                                 </TouchableOpacity>
                             </View>
-                            {errors.password_confirm && (
-                                <Text style={styles.errorText}>{errors.password_confirm}</Text>
-                            )}
+                            {errors.password_confirm && <Text style={styles.errorText}>{errors.password_confirm}</Text>}
                         </View>
 
+                        {/* Register Button */}
                         <TouchableOpacity
-                            style={[styles.button, isLoading && styles.buttonDisabled]}
+                            style={styles.button}
                             onPress={handleRegister}
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <ActivityIndicator color="#fff" />
+                                <ActivityIndicator color={COLORS.surface} />
                             ) : (
-                                <Text style={styles.buttonText}>Create Account</Text>
+                                <Text style={styles.buttonText}>Sign Up</Text>
                             )}
                         </TouchableOpacity>
-                    </View>
 
-                    {/* Footer */}
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>Already have an account? </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                            <Text style={styles.linkText}>Sign In</Text>
-                        </TouchableOpacity>
+                        {/* Login Link */}
+                        <View style={styles.footer}>
+                            <Text style={styles.footerText}>Already have an account? </Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                                <Text style={styles.link}>Sign In</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </ScrollView>
@@ -218,9 +224,8 @@ const styles = StyleSheet.create({
         flexGrow: 1,
     },
     content: {
-        flex: 1,
         padding: 24,
-        justifyContent: 'center',
+        paddingTop: 60,
     },
     header: {
         marginBottom: 32,
@@ -228,7 +233,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: COLORS.text,
+        color: COLORS.primary,
         marginBottom: 8,
     },
     subtitle: {
@@ -236,36 +241,41 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
     },
     form: {
-        marginBottom: 24,
+        width: '100%',
     },
     inputContainer: {
-        marginBottom: 16,
+        marginBottom: 20,
     },
     label: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: COLORS.text,
         marginBottom: 8,
+        fontSize: 14,
+        fontWeight: '500',
+        color: COLORS.text,
     },
     input: {
-        backgroundColor: COLORS.surface,
+        height: 50,
         borderWidth: 1,
         borderColor: COLORS.border,
         borderRadius: 12,
-        padding: 16,
+        paddingHorizontal: 16,
         fontSize: 16,
         color: COLORS.text,
+        backgroundColor: COLORS.surface,
     },
     passwordContainer: {
-        position: 'relative',
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 50,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        backgroundColor: COLORS.surface,
     },
     passwordInput: {
-        paddingRight: 50,
-    },
-    eyeIcon: {
-        position: 'absolute',
-        right: 16,
-        top: 16,
+        flex: 1,
+        fontSize: 16,
+        color: COLORS.text,
     },
     inputError: {
         borderColor: COLORS.error,
@@ -276,17 +286,21 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     button: {
+        height: 50,
         backgroundColor: COLORS.primary,
         borderRadius: 12,
-        padding: 16,
+        justifyContent: 'center',
         alignItems: 'center',
         marginTop: 8,
-    },
-    buttonDisabled: {
-        opacity: 0.7,
+        marginBottom: 24,
+        shadowColor: COLORS.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.surface,
         fontSize: 16,
         fontWeight: '600',
     },
@@ -299,7 +313,7 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
         fontSize: 14,
     },
-    linkText: {
+    link: {
         color: COLORS.primary,
         fontSize: 14,
         fontWeight: '600',

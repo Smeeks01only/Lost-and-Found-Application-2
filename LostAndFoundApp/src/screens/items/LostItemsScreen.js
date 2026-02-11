@@ -1,8 +1,9 @@
 /**
  * Lost Items Screen - List and manage user's lost items
+ * UI Pattern: Clean Card List (Prescriptions Style)
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -15,7 +16,9 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { itemsAPI } from '../../api';
-import { COLORS, STATUS_LABELS, CATEGORIES } from '../../constants';
+import { STATUS_LABELS, CATEGORIES, COLORS } from '../../constants';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LostItemsScreen({ navigation }) {
     const [items, setItems] = useState([]);
@@ -48,51 +51,62 @@ export default function LostItemsScreen({ navigation }) {
 
     const getCategoryIcon = (category) => {
         const cat = CATEGORIES.find((c) => c.value === category);
-        return cat?.icon || '📦';
+        return cat?.icon || 'package-variant';
     };
 
     const formatDate = (dateString) => {
+        if (!dateString) return 'Unknown Date';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     };
 
     const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.itemCard}
-            onPress={() => navigation.navigate('ItemDetail', { id: item.id, type: 'lost' })}
-        >
-            <View style={styles.itemIconContainer}>
-                <Text style={styles.itemIcon}>{getCategoryIcon(item.category)}</Text>
-            </View>
-
-            <View style={styles.itemContent}>
-                <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
-                <Text style={styles.itemLocation} numberOfLines={1}>📍 {item.location_lost}</Text>
-                <Text style={styles.itemDate}>Lost on {formatDate(item.date_lost)}</Text>
-            </View>
-
-            <View style={styles.itemRight}>
-                <View
-                    style={[
-                        styles.statusBadge,
-                        { backgroundColor: STATUS_LABELS[item.status]?.fadedBg || 'rgba(107, 114, 128, 0.15)' },
-                    ]}
-                >
-                    <Text
-                        style={[styles.statusText, { color: STATUS_LABELS[item.status]?.color || '#6B7280' }]}
-                    >
+        <View style={styles.card}>
+            {/* Header: Icon + Title */}
+            <View style={styles.cardHeader}>
+                <View style={[styles.iconContainer, { backgroundColor: COLORS.primaryFaded }]}>
+                    <MaterialCommunityIcons name={getCategoryIcon(item.category)} size={24} color={COLORS.primary} />
+                </View>
+                <View style={styles.headerTextContainer}>
+                    <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+                    <Text style={styles.cardSubtitle} numberOfLines={1}>
                         {STATUS_LABELS[item.status]?.label || item.status}
                     </Text>
                 </View>
             </View>
-        </TouchableOpacity>
+
+            {/* Body: Description / Location */}
+            <View style={styles.cardBody}>
+                <Text style={styles.bodyText}>
+                    Lost at <Text style={styles.highlightText}>{item.location_lost}</Text>.
+                    Please check for matches regularly.
+                </Text>
+
+                <View style={styles.metaRow}>
+                    <Text style={styles.metaText}>Reported: {formatDate(item.created_at || item.date_lost)}</Text>
+                </View>
+            </View>
+
+            {/* Footer: Action Button */}
+            <View style={styles.cardFooter}>
+                <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => navigation.navigate('ItemDetail', { id: item.id, type: 'lost' })}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.actionButtonText}>View Details</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
     );
 
     const renderEmptyList = () => (
         <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📭</Text>
-            <Text style={styles.emptyTitle}>No Lost Items</Text>
-            <Text style={styles.emptyText}>You haven't reported any lost items yet</Text>
+            <MaterialCommunityIcons name="clipboard-text-outline" size={64} color={COLORS.textLight} />
+            <Text style={styles.emptyTitle}>No Items Reported</Text>
+            <Text style={styles.emptyText}>
+                Your reported lost items will appear here using the synced list above.
+            </Text>
             <TouchableOpacity
                 style={styles.emptyButton}
                 onPress={() => navigation.navigate('ReportLostItem')}
@@ -102,162 +116,206 @@ export default function LostItemsScreen({ navigation }) {
         </View>
     );
 
-    if (isLoading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={COLORS.primary} />
-            </View>
-        );
-    }
-
     return (
-        <View style={styles.container}>
-            <FlatList
-                data={items}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={renderItem}
-                contentContainerStyle={items.length === 0 ? styles.emptyList : styles.list}
-                ListEmptyComponent={renderEmptyList}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            />
+        <SafeAreaView style={styles.container} edges={['top']}>
+            <View style={styles.screenHeader}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                    <MaterialCommunityIcons name="chevron-left" size={32} color={COLORS.text} />
+                </TouchableOpacity>
+                <Text style={styles.screenTitle}>My Items</Text>
+            </View>
 
-            {/* Floating Action Button */}
+            <View style={styles.listContainer}>
+                <Text style={styles.listDescription}>
+                    Your synced lost items are included below. Feel free to check for potential matches.
+                </Text>
+
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={COLORS.primary} />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={items}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={renderItem}
+                        contentContainerStyle={items.length === 0 ? styles.emptyListContent : styles.listContent}
+                        ListEmptyComponent={renderEmptyList}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+                        showsVerticalScrollIndicator={false}
+                    />
+                )}
+            </View>
+
+            {/* FAB - Optional, if we want quick add similar to reference */}
+            {/* 
             <TouchableOpacity
                 style={styles.fab}
                 onPress={() => navigation.navigate('ReportLostItem')}
             >
-                <Text style={styles.fabText}>+</Text>
+                <MaterialCommunityIcons name="plus" size={28} color="#fff" />
             </TouchableOpacity>
-        </View>
+            */}
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.background,
+        backgroundColor: COLORS.background, // Should be light gray/blueish
+    },
+    screenHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    backButton: {
+        marginRight: 8,
+        marginLeft: -8,
+    },
+    screenTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    listContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    listDescription: {
+        fontSize: 15,
+        color: COLORS.textSecondary,
+        marginBottom: 20,
+        lineHeight: 22,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.background,
     },
-    list: {
-        padding: 16,
-        paddingBottom: 80,
+    listContent: {
+        paddingBottom: 40,
     },
-    emptyList: {
+    emptyListContent: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
     },
-    itemCard: {
+    // Card Styles
+    card: {
+        backgroundColor: COLORS.surface,
+        borderRadius: 16, // Softer corners
+        padding: 20,
+        marginBottom: 16,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.03)',
+    },
+    cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.surface,
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
+        marginBottom: 16,
     },
-    itemIconContainer: {
-        width: 48,
-        height: 48,
+    iconContainer: {
+        width: 44,
+        height: 44,
         borderRadius: 12,
-        backgroundColor: COLORS.background,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 16,
     },
-    itemIcon: {
-        fontSize: 24,
-    },
-    itemContent: {
+    headerTextContainer: {
         flex: 1,
     },
-    itemTitle: {
-        fontSize: 16,
-        fontWeight: '600',
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
         color: COLORS.text,
         marginBottom: 4,
     },
-    itemLocation: {
-        fontSize: 14,
+    cardSubtitle: {
+        fontSize: 13,
         color: COLORS.textSecondary,
-        marginBottom: 2,
+        fontWeight: '500',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
-    itemDate: {
-        fontSize: 12,
-        color: COLORS.textLight,
+    cardBody: {
+        marginBottom: 20,
     },
-    itemRight: {
-        alignItems: 'flex-end',
+    bodyText: {
+        fontSize: 15,
+        color: COLORS.textSecondary,
+        lineHeight: 22,
+        marginBottom: 8,
     },
-    statusBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 8,
-    },
-    statusText: {
-        fontSize: 12,
+    highlightText: {
+        color: COLORS.text,
         fontWeight: '600',
     },
+    metaRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    metaText: {
+        fontSize: 13,
+        color: COLORS.textLight,
+    },
+    cardFooter: {
+        alignItems: 'flex-end',
+    },
+    actionButton: {
+        backgroundColor: COLORS.surface,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    actionButtonText: {
+        color: COLORS.primary,
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    // Empty State
     emptyContainer: {
         alignItems: 'center',
-        padding: 40,
-    },
-    emptyIcon: {
-        fontSize: 64,
-        marginBottom: 16,
+        padding: 20,
     },
     emptyTitle: {
         fontSize: 20,
-        fontWeight: '600',
+        fontWeight: 'bold',
         color: COLORS.text,
+        marginTop: 16,
         marginBottom: 8,
     },
     emptyText: {
-        fontSize: 16,
+        fontSize: 15,
         color: COLORS.textSecondary,
         textAlign: 'center',
         marginBottom: 24,
+        lineHeight: 22,
     },
     emptyButton: {
         backgroundColor: COLORS.primary,
         paddingHorizontal: 24,
         paddingVertical: 12,
-        borderRadius: 12,
+        borderRadius: 24,
+        elevation: 4,
     },
     emptyButtonText: {
         color: '#fff',
-        fontSize: 16,
         fontWeight: '600',
-    },
-    fab: {
-        position: 'absolute',
-        right: 20,
-        bottom: 20,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: COLORS.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 5,
-    },
-    fabText: {
-        fontSize: 32,
-        color: '#fff',
-        fontWeight: '300',
-        marginTop: -2,
+        fontSize: 15,
     },
 });

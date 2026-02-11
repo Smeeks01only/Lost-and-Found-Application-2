@@ -15,9 +15,11 @@ import {
 } from 'react-native';
 import { matchesAPI } from '../../api';
 import { COLORS } from '../../constants';
+// import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function SubmitClaimScreen({ route, navigation }) {
     const { matchId } = route.params;
+    // const { theme } = useTheme(); // Removed
     const [match, setMatch] = useState(null);
     const [secretAnswer, setSecretAnswer] = useState('');
     const [additionalProof, setAdditionalProof] = useState('');
@@ -111,6 +113,7 @@ export default function SubmitClaimScreen({ route, navigation }) {
                         <TextInput
                             style={styles.input}
                             placeholder="Enter your answer"
+                            placeholderTextColor={COLORS.textLight}
                             value={secretAnswer}
                             onChangeText={setSecretAnswer}
                             autoCapitalize="none"
@@ -128,6 +131,7 @@ export default function SubmitClaimScreen({ route, navigation }) {
                     <TextInput
                         style={[styles.input, styles.textArea]}
                         placeholder="e.g., There's a scratch on the back, my initials inside, etc."
+                        placeholderTextColor={COLORS.textLight}
                         multiline
                         numberOfLines={4}
                         textAlignVertical="top"

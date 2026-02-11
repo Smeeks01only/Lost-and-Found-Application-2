@@ -17,8 +17,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { itemsAPI, matchesAPI } from '../../api';
 import { COLORS } from '../../constants';
+// import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function AdminDashboardScreen({ navigation }) {
+    // const { theme } = useTheme(); // Removed
     const [stats, setStats] = useState({
         totalLostItems: 0,
         totalFoundItems: 0,
@@ -99,7 +101,7 @@ export default function AdminDashboardScreen({ navigation }) {
             <ScrollView
                 contentContainerStyle={styles.content}
                 refreshControl={
-                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
                 }
             >
                 {/* Stats Grid */}
@@ -252,6 +254,11 @@ const styles = StyleSheet.create({
         borderLeftWidth: 4,
         borderWidth: 1,
         borderColor: COLORS.border,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
     },
     statIcon: {
         marginRight: 12,
@@ -277,6 +284,11 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         borderWidth: 1,
         borderColor: COLORS.border,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     actionIcon: {
         marginRight: 12,

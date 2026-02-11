@@ -15,9 +15,11 @@ import {
     Platform,
 } from 'react-native';
 import { itemsAPI } from '../../api';
-import { COLORS, CATEGORIES } from '../../constants';
+import { CATEGORIES, COLORS } from '../../constants';
+// import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function ReportLostItemScreen({ navigation }) {
+    // const { theme } = useTheme(); // Removed
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -77,6 +79,7 @@ export default function ReportLostItemScreen({ navigation }) {
                     <TextInput
                         style={[styles.input, errors.title && styles.inputError]}
                         placeholder="e.g., Black Leather Wallet"
+                        placeholderTextColor={COLORS.textLight}
                         value={formData.title}
                         onChangeText={(v) => updateField('title', v)}
                     />
@@ -139,6 +142,7 @@ export default function ReportLostItemScreen({ navigation }) {
                     <TextInput
                         style={[styles.input, styles.textArea, errors.description && styles.inputError]}
                         placeholder="Describe your lost item..."
+                        placeholderTextColor={COLORS.textLight}
                         multiline
                         numberOfLines={4}
                         textAlignVertical="top"
@@ -154,6 +158,7 @@ export default function ReportLostItemScreen({ navigation }) {
                     <TextInput
                         style={[styles.input, errors.location_lost && styles.inputError]}
                         placeholder="e.g., Library, Building A, Room 101"
+                        placeholderTextColor={COLORS.textLight}
                         value={formData.location_lost}
                         onChangeText={(v) => updateField('location_lost', v)}
                     />
@@ -166,6 +171,7 @@ export default function ReportLostItemScreen({ navigation }) {
                     <TextInput
                         style={[styles.input, errors.date_lost && styles.inputError]}
                         placeholder="YYYY-MM-DD"
+                        placeholderTextColor={COLORS.textLight}
                         value={formData.date_lost}
                         onChangeText={(v) => updateField('date_lost', v)}
                     />
@@ -250,6 +256,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.surface,
         borderRadius: 12,
         padding: 8,
+        borderWidth: 1,
+        borderColor: COLORS.border,
     },
     categoryItem: {
         width: '33.33%',

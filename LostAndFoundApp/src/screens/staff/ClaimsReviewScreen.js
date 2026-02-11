@@ -18,9 +18,11 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { matchesAPI } from '../../api';
-import { COLORS, STATUS_LABELS } from '../../constants';
+import { STATUS_LABELS, COLORS } from '../../constants';
+// import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function ClaimsReviewScreen({ navigation }) {
+    // const { theme } = useTheme(); // Removed
     const [claims, setClaims] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -61,8 +63,8 @@ export default function ClaimsReviewScreen({ navigation }) {
 
         try {
             await matchesAPI.reviewClaim(selectedClaim.id, {
-                approved,
-                notes: reviewNotes,
+                status: approved ? 'APPROVED' : 'REJECTED',
+                admin_notes: reviewNotes,
             });
             Alert.alert(
                 'Success',
@@ -78,7 +80,7 @@ export default function ClaimsReviewScreen({ navigation }) {
     };
 
     const renderClaim = ({ item }) => {
-        const statusInfo = STATUS_LABELS[item.status] || { label: item.status, color: '#6B7280', fadedBg: 'rgba(107, 114, 128, 0.15)' };
+        const statusInfo = STATUS_LABELS[item.status] || { label: item.status, color: COLORS.textSecondary, fadedBg: COLORS.grayFaded };
 
         return (
             <TouchableOpacity
@@ -92,8 +94,8 @@ export default function ClaimsReviewScreen({ navigation }) {
                             Claim #{item.id?.toString().slice(-6) || 'N/A'}
                         </Text>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.fadedBg }]}>
-                        <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.color + '25' || COLORS.grayFaded }]}>
+                        <Text style={[styles.statusText, { color: statusInfo.color || COLORS.textSecondary }]}>
                             {statusInfo.label}
                         </Text>
                     </View>
@@ -117,7 +119,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                 <View style={styles.claimDetails}>
                     <Text style={styles.detailLabel}>Match Score:</Text>
                     <Text style={styles.matchScore}>
-                        {(item.match?.score * 100 || 0).toFixed(0)}%
+                        {(item.match?.final_score * 100 || 0).toFixed(0)}%
                     </Text>
                 </View>
 
@@ -148,7 +150,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                 keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 contentContainerStyle={styles.listContent}
                 refreshControl={
-                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
@@ -166,6 +168,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                 visible={showReviewModal}
                 animationType="slide"
                 transparent={true}
+                onRequestClose={() => setShowReviewModal(false)}
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
@@ -196,6 +199,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                             value={reviewNotes}
                             onChangeText={setReviewNotes}
                             placeholder="Add review notes (optional)..."
+                            placeholderTextColor={COLORS.textLight}
                             multiline
                             numberOfLines={3}
                         />
@@ -270,6 +274,11 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         borderWidth: 1,
         borderColor: COLORS.border,
+        shadowColor: COLORS.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
     },
     claimHeader: {
         flexDirection: 'row',
@@ -374,6 +383,7 @@ const styles = StyleSheet.create({
     },
     summaryLabel: {
         fontWeight: '600',
+        color: COLORS.text,
     },
     notesInput: {
         backgroundColor: COLORS.background,
@@ -385,6 +395,7 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
         marginBottom: 16,
         minHeight: 80,
+        color: COLORS.text,
     },
     modalActions: {
         flexDirection: 'row',

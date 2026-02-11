@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet } from 'react-native';
@@ -23,10 +23,12 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 // Item Screens
 import LostItemsScreen from '../screens/items/LostItemsScreen';
+import ItemDetailScreen from '../screens/items/ItemDetailScreen';
 import ReportLostItemScreen from '../screens/items/ReportLostItemScreen';
 
 // Match Screens
 import MatchesScreen from '../screens/matches/MatchesScreen';
+import MatchDetailScreen from '../screens/matches/MatchDetailScreen';
 import SubmitClaimScreen from '../screens/matches/SubmitClaimScreen';
 
 // Staff Screens
@@ -35,13 +37,14 @@ import ClaimsReviewScreen from '../screens/staff/ClaimsReviewScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // Tab Bar Icon Component
 const TabIcon = ({ icon, focused, color }) => (
-    <View style={[styles.tabIcon, focused && styles.tabIconFocused]}>
+    <View style={[styles.tabIcon]}>
         <MaterialCommunityIcons name={icon} size={24} color={color} />
     </View>
 );
@@ -52,7 +55,7 @@ function LoserTabs() {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: styles.tabBar,
+                tabBarStyle: [styles.tabBar, { backgroundColor: COLORS.surface, borderTopColor: COLORS.border }],
                 tabBarShowLabel: true,
                 tabBarActiveTintColor: COLORS.primary,
                 tabBarInactiveTintColor: COLORS.textSecondary,
@@ -99,7 +102,7 @@ function StaffTabs() {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: styles.tabBar,
+                tabBarStyle: [styles.tabBar, { backgroundColor: COLORS.surface, borderTopColor: COLORS.border }],
                 tabBarShowLabel: true,
                 tabBarActiveTintColor: COLORS.secondary,
                 tabBarInactiveTintColor: COLORS.textSecondary,
@@ -146,7 +149,7 @@ function AdminTabs() {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: styles.tabBar,
+                tabBarStyle: [styles.tabBar, { backgroundColor: COLORS.surface, borderTopColor: COLORS.border }],
                 tabBarShowLabel: true,
                 tabBarActiveTintColor: COLORS.error,
                 tabBarInactiveTintColor: COLORS.textSecondary,
@@ -223,7 +226,8 @@ function MainStack({ userRole }) {
             screenOptions={{
                 headerStyle: { backgroundColor: COLORS.surface },
                 headerTintColor: COLORS.text,
-                headerTitleStyle: { fontWeight: '600' },
+                headerTitleStyle: { fontWeight: '600', color: COLORS.text },
+                contentStyle: { backgroundColor: COLORS.background },
             }}
         >
             <Stack.Screen
@@ -237,6 +241,11 @@ function MainStack({ userRole }) {
                 options={{ title: 'Report Lost Item' }}
             />
             <Stack.Screen
+                name="ItemDetail"
+                component={ItemDetailScreen}
+                options={{ title: 'Item Details' }}
+            />
+            <Stack.Screen
                 name="SubmitClaim"
                 component={SubmitClaimScreen}
                 options={{ title: 'Submit Claim' }}
@@ -246,6 +255,16 @@ function MainStack({ userRole }) {
                 name="ClaimsReview"
                 component={ClaimsReviewScreen}
                 options={{ title: 'Review Claims' }}
+            />
+            <Stack.Screen
+                name="Notifications"
+                component={NotificationsScreen}
+                options={{ title: 'Notifications' }}
+            />
+            <Stack.Screen
+                name="MatchDetail"
+                component={MatchDetailScreen}
+                options={{ title: 'Match Details' }}
             />
         </Stack.Navigator>
     );
@@ -257,14 +276,27 @@ export default function AppNavigator() {
 
     if (isLoading) {
         return (
-            <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading...</Text>
+            <View style={[styles.loadingContainer, { backgroundColor: COLORS.background }]}>
+                <Text style={[styles.loadingText, { color: COLORS.textSecondary }]}>Loading...</Text>
             </View>
         );
     }
 
+    const appTheme = {
+        ...DefaultTheme,
+        colors: {
+            ...DefaultTheme.colors,
+            primary: COLORS.primary,
+            background: COLORS.background,
+            card: COLORS.surface,
+            text: COLORS.text,
+            border: COLORS.border,
+            notification: COLORS.error,
+        },
+    };
+
     return (
-        <NavigationContainer>
+        <NavigationContainer theme={appTheme}>
             {isAuthenticated ? (
                 <MainStack userRole={user?.role || 'LOSER'} />
             ) : (
@@ -279,28 +311,21 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: COLORS.background,
     },
     loadingText: {
         fontSize: 16,
-        color: COLORS.textSecondary,
     },
     tabBar: {
         height: 70,
         paddingBottom: 10,
         paddingTop: 8,
-        backgroundColor: COLORS.surface,
         borderTopWidth: 1,
-        borderTopColor: COLORS.border,
     },
     tabLabel: {
         fontSize: 12,
         fontWeight: '500',
     },
     tabIcon: {
-        padding: 4,
-    },
-    tabIconFocused: {
-        // Simplified - removed transform which can cause Android issues
-    },
+        // Simple container for icon
+    }
 });
