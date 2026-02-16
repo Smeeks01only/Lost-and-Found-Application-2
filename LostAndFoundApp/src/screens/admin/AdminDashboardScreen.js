@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { itemsAPI, matchesAPI } from '../../api';
+import { itemsAPI, matchesAPI, authAPI } from '../../api';
 import { COLORS } from '../../constants';
 // import { useTheme } from '../../context/ThemeContext'; // Removed
 
@@ -26,7 +26,8 @@ export default function AdminDashboardScreen({ navigation }) {
         totalFoundItems: 0,
         pendingClaims: 0,
         totalMatches: 0,
-        recentActivity: [],
+        totalUsers: 0,
+        recentSignups: 0,
     });
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -34,11 +35,12 @@ export default function AdminDashboardScreen({ navigation }) {
     const loadDashboardData = useCallback(async () => {
         try {
             // Load stats from various endpoints
-            const [lostItems, foundItems, claims, matches] = await Promise.all([
+            const [lostItems, foundItems, claims, matches, userStats] = await Promise.all([
                 itemsAPI.getLostItems().catch(() => ({ results: [] })),
                 itemsAPI.getFoundItems().catch(() => ({ results: [] })),
                 matchesAPI.getPendingClaims().catch(() => ({ results: [] })),
                 matchesAPI.getMatches().catch(() => ({ results: [] })),
+                authAPI.getUserStats().catch(() => ({ total_users: 0 })),
             ]);
 
             setStats({
@@ -46,6 +48,8 @@ export default function AdminDashboardScreen({ navigation }) {
                 totalFoundItems: foundItems.results?.length || foundItems.count || 0,
                 pendingClaims: claims.results?.length || claims.length || 0,
                 totalMatches: matches.results?.length || matches.count || 0,
+                totalUsers: userStats.total_users || 0,
+                recentSignups: userStats.recent_signups || 0,
             });
         } catch (error) {
             console.error('Error loading dashboard data:', error);
@@ -113,24 +117,42 @@ export default function AdminDashboardScreen({ navigation }) {
                             title="Lost Items"
                             value={stats.totalLostItems}
                             color={COLORS.primary}
+                            onPress={() => navigation.navigate('AllLostItems')}
                         />
                         <StatCard
                             icon="package-variant-closed"
                             title="Found Items"
                             value={stats.totalFoundItems}
                             color={COLORS.success}
+                            onPress={() => navigation.navigate('FoundItems')}
                         />
                         <StatCard
                             icon="magnify-scan"
                             title="Matches"
                             value={stats.totalMatches}
                             color="#8B5CF6"
+                            onPress={() => navigation.navigate('AllMatches')}
                         />
                         <StatCard
                             icon="file-document-outline"
                             title="Pending Claims"
                             value={stats.pendingClaims}
                             color={COLORS.warning}
+                            onPress={() => navigation.navigate('Claims')}
+                        />
+                        <StatCard
+                            icon="account-group"
+                            title="Total Users"
+                            value={stats.totalUsers}
+                            color="#6366F1"
+                            onPress={() => navigation.navigate('UserManagement')}
+                        />
+                        <StatCard
+                            icon="account-plus"
+                            title="New This Week"
+                            value={stats.recentSignups}
+                            color="#EC4899"
+                            onPress={() => navigation.navigate('UserManagement')}
                         />
                     </View>
                 </View>
@@ -138,6 +160,12 @@ export default function AdminDashboardScreen({ navigation }) {
                 {/* Quick Actions */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Quick Actions</Text>
+                    <ActionCard
+                        icon="account-cog"
+                        title="Manage Users"
+                        subtitle="View, search, and manage all users"
+                        onPress={() => navigation.navigate('UserManagement')}
+                    />
                     <ActionCard
                         icon="clipboard-check-outline"
                         title="Review Claims"

@@ -10,7 +10,10 @@ from .views import (
     CustomTokenObtainPairView,
     ProfileView,
     ChangePasswordView,
-    LogoutView
+    LogoutView,
+    AdminUserListView,
+    AdminUserDetailView,
+    AdminUserStatsView,
 )
 
 app_name = 'accounts'
@@ -25,4 +28,9 @@ urlpatterns = [
     # Profile
     path('profile/', ProfileView.as_view(), name='profile'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+
+    # Admin User Management
+    path('users/', AdminUserListView.as_view(), name='admin_user_list'),
+    path('users/stats/', AdminUserStatsView.as_view(), name='admin_user_stats'),
+    path('users/<uuid:pk>/', AdminUserDetailView.as_view(), name='admin_user_detail'),
 ]

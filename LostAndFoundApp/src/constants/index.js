@@ -41,12 +41,16 @@ export const ENDPOINTS = {
     // Notifications
     NOTIFICATIONS: '/notifications/',
     UNREAD_COUNT: '/notifications/unread_count/',
+
+    // Admin User Management
+    USERS: '/auth/users/',
+    USER_STATS: '/auth/users/stats/',
 };
 
 // App Colors
 export const COLORS = {
     primary: '#4F46E5',    // Indigo 600
-     // Indigo 700
+    // Indigo 700
     primaryLight: '#818CF8', // Indigo 400
     primaryFaded: 'rgba(79, 70, 229, 0.1)', // Indigo 600 with opacity
     secondary: '#10B981',   // Emerald 500

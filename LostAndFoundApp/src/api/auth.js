@@ -64,5 +64,30 @@ export const authAPI = {
         });
         return response;
     },
-};
 
+    // ==================== Admin User Management ====================
+
+    /**
+     * Get all users (Admin only)
+     */
+    getUsers: async (params = {}) => {
+        const response = await apiClient.get(ENDPOINTS.USERS, { params });
+        return response;
+    },
+
+    /**
+     * Get user statistics (Admin only)
+     */
+    getUserStats: async () => {
+        const response = await apiClient.get(ENDPOINTS.USER_STATS);
+        return response;
+    },
+
+    /**
+     * Update a user's role or active status (Admin only)
+     */
+    updateUser: async (userId, data) => {
+        const response = await apiClient.patch(`${ENDPOINTS.USERS}${userId}/`, data);
+        return response;
+    },
+};

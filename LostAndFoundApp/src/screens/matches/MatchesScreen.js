@@ -289,13 +289,13 @@ const EmptyState = () => {
             </Text>
             <View style={styles.nlpFeatures}>
                 <View style={styles.featureTag}>
-                    <Text style={styles.featureText}>🧠 Semantic Analysis</Text>
+                    <Text style={styles.featureText}>Semantic Analysis</Text>
                 </View>
                 <View style={styles.featureTag}>
-                    <Text style={styles.featureText}>📊 Pattern Matching</Text>
+                    <Text style={styles.featureText}>Pattern Matching</Text>
                 </View>
                 <View style={styles.featureTag}>
-                    <Text style={styles.featureText}>🎯 Smart Scoring</Text>
+                    <Text style={styles.featureText}>Smart Scoring</Text>
                 </View>
             </View>
             <Text style={styles.emptySubtext}>

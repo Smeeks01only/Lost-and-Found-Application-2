@@ -34,6 +34,7 @@ import SubmitClaimScreen from '../screens/matches/SubmitClaimScreen';
 // Staff Screens
 import FoundItemsScreen from '../screens/staff/FoundItemsScreen';
 import ClaimsReviewScreen from '../screens/staff/ClaimsReviewScreen';
+import UserManagementScreen from '../screens/admin/UserManagementScreen';
 
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
@@ -260,6 +261,21 @@ function MainStack({ userRole }) {
                 name="Notifications"
                 component={NotificationsScreen}
                 options={{ title: 'Notifications' }}
+            />
+            <Stack.Screen
+                name="UserManagement"
+                component={UserManagementScreen}
+                options={{ headerShown: false }}
+            />
+            <Stack.Screen
+                name="AllLostItems"
+                component={LostItemsScreen}
+                options={{ title: 'All Lost Items' }}
+            />
+            <Stack.Screen
+                name="AllMatches"
+                component={MatchesScreen}
+                options={{ title: 'All Matches' }}
             />
             <Stack.Screen
                 name="MatchDetail"

@@ -105,3 +105,18 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save()
         return user
+
+
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for admin-level user updates (role, active status)."""
+
+    class Meta:
+        model = User
+        fields = ['role', 'is_active', 'is_verified']
+
+    def validate_role(self, value):
+        """Ensure role is a valid choice."""
+        valid_roles = [choice[0] for choice in User.RoleChoices.choices]
+        if value not in valid_roles:
+            raise serializers.ValidationError(f"Invalid role. Must be one of: {valid_roles}")
+        return value

@@ -18,11 +18,11 @@ from .serializers import (
 from items.models import LostItemStatus, FoundItemStatus
 
 
-class IsAdminUser(permissions.BasePermission):
-    """Permission to only allow admin users."""
+class IsStaffUser(permissions.BasePermission):
+    """Permission to allow staff and admin users."""
     
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_admin
+        return request.user.is_authenticated and request.user.has_staff_permissions()
 
 
 class MatchViewSet(viewsets.ReadOnlyModelViewSet):
@@ -154,7 +154,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
             return Claim.objects.all()
         return Claim.objects.filter(claimant=user)
     
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[IsStaffUser])
     def review(self, request, pk=None):
         """Admin review of a claim."""
         claim = self.get_object()
@@ -189,7 +189,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
             'claim': ClaimSerializer(claim).data
         })
     
-    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    @action(detail=False, methods=['get'], permission_classes=[IsStaffUser])
     def pending(self, request):
         """Get all pending claims for admin review."""
         pending_claims = Claim.objects.filter(status=ClaimStatus.PENDING)

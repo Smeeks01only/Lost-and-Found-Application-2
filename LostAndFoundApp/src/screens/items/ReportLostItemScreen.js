@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { itemsAPI } from '../../api';
 import { CATEGORIES, COLORS } from '../../constants';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 // import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function ReportLostItemScreen({ navigation }) {
@@ -94,9 +95,10 @@ export default function ReportLostItemScreen({ navigation }) {
                         onPress={() => setShowCategoryPicker(!showCategoryPicker)}
                     >
                         {selectedCategory ? (
-                            <Text style={styles.pickerText}>
-                                {selectedCategory.icon} {selectedCategory.label}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <MaterialCommunityIcons name={selectedCategory.icon} size={20} color={COLORS.primary} style={{ marginRight: 8 }} />
+                                <Text style={styles.pickerText}>{selectedCategory.label}</Text>
+                            </View>
                         ) : (
                             <Text style={styles.placeholderText}>Select a category</Text>
                         )}
@@ -117,7 +119,7 @@ export default function ReportLostItemScreen({ navigation }) {
                                         setShowCategoryPicker(false);
                                     }}
                                 >
-                                    <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                                    <MaterialCommunityIcons name={cat.icon} size={28} color={formData.category === cat.value ? COLORS.primary : COLORS.textSecondary} />
                                     <Text
                                         style={[
                                             styles.categoryLabel,
