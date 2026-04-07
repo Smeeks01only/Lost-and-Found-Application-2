@@ -1,0 +1,56 @@
+lost_item_id,found_item_id,is_true_match,notes
+L001,F001,1,Primary ground-truth match
+L002,F002,1,Primary ground-truth match
+L003,F003,1,Primary ground-truth match
+L004,F004,1,Primary ground-truth match
+L005,F005,1,Primary ground-truth match
+L006,F006,1,Primary ground-truth match
+L007,F007,1,Primary ground-truth match
+L008,F008,1,Primary ground-truth match
+L009,F009,1,Primary ground-truth match
+L010,F010,1,Primary ground-truth match
+L011,F011,1,Primary ground-truth match
+L012,F012,1,Primary ground-truth match
+L013,F013,1,Primary ground-truth match
+L014,F014,1,Primary ground-truth match
+L015,F015,1,Primary ground-truth match
+L016,F016,1,Primary ground-truth match
+L017,F017,1,Primary ground-truth match
+L018,F018,1,Primary ground-truth match
+L019,F019,1,Primary ground-truth match
+L020,F020,1,Primary ground-truth match
+L021,F021,1,Primary ground-truth match
+L022,F022,1,Primary ground-truth match
+L023,F023,1,Primary ground-truth match
+L024,F024,1,Primary ground-truth match
+L025,F025,1,Primary ground-truth match
+L026,F026,1,Primary ground-truth match
+L027,F027,1,Primary ground-truth match
+L028,F028,1,Primary ground-truth match
+L029,F029,1,Primary ground-truth match
+L030,F030,1,Primary ground-truth match
+L031,F031,1,Primary ground-truth match
+L032,F032,1,Primary ground-truth match
+L033,F033,1,Primary ground-truth match
+L034,F034,1,Primary ground-truth match
+L035,F035,1,Primary ground-truth match
+L036,F036,1,Primary ground-truth match
+L037,F037,1,Primary ground-truth match
+L038,F038,1,Primary ground-truth match
+L039,F039,1,Primary ground-truth match
+L040,F040,1,Primary ground-truth match
+L001,F041,0,Intentional distractor / non-match
+L002,F042,0,Intentional distractor / non-match
+L003,F043,0,Intentional distractor / non-match
+L004,F044,0,Intentional distractor / non-match
+L005,F045,0,Intentional distractor / non-match
+L006,F046,0,Intentional distractor / non-match
+L007,F047,0,Intentional distractor / non-match
+L008,F048,0,Intentional distractor / non-match
+L009,F049,0,Intentional distractor / non-match
+L010,F050,0,Intentional distractor / non-match
+L011,F051,0,Intentional distractor / non-match
+L012,F052,0,Intentional distractor / non-match
+L013,F053,0,Intentional distractor / non-match
+L014,F054,0,Intentional distractor / non-match
+L015,F055,0,Intentional distractor / non-match

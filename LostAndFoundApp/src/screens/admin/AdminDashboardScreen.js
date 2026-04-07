@@ -184,10 +184,29 @@ export default function AdminDashboardScreen({ navigation }) {
                         subtitle="Trigger NLP-based item matching"
                         onPress={() => Alert.alert(
                             'Run Matching',
-                            'This will trigger the matching algorithm for all items.',
+                            'This will trigger the matching algorithm for all active lost items. This may take a moment.',
                             [
                                 { text: 'Cancel', style: 'cancel' },
-                                { text: 'Run', onPress: () => Alert.alert('Success', 'Matching started') }
+                                {
+                                    text: 'Run',
+                                    onPress: async () => {
+                                        try {
+                                            setIsLoading(true);
+                                            const response = await matchesAPI.runMatchingAlgorithm();
+                                            const stats = response.stats || {};
+                                            Alert.alert(
+                                                'Matching Completed',
+                                                `Processed: ${stats.processed}\nMatches Found: ${stats.matches_found}\nNew Matches: ${stats.new_matches}`,
+                                                [{ text: 'OK', onPress: () => loadDashboardData() }]
+                                            );
+                                        } catch (error) {
+                                            Alert.alert('Error', 'Failed to run matching algorithm.');
+                                            console.error(error);
+                                        } finally {
+                                            setIsLoading(false);
+                                        }
+                                    }
+                                }
                             ]
                         )}
                     />

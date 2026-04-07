@@ -1,6 +1,3 @@
-# UTF-8 encoded requirements (Windows-friendly)
-# Recommended: Python 3.11 for ChromaDB compatibility on Windows.
-
 amqp==5.3.1
 anyio==4.12.1
 asgiref==3.11.1
@@ -65,3 +62,4 @@ tzdata==2025.3
 tzlocal==5.3.1
 vine==5.1.0
 wcwidth==0.5.3
+

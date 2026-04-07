@@ -33,6 +33,7 @@ export const ENDPOINTS = {
 
     // Matches
     MATCHES: '/matches/',
+    RUN_MATCHING: '/matches/run/',
 
     // Claims
     CLAIMS: '/claims/',

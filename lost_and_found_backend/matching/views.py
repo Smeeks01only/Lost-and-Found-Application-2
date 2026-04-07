@@ -195,3 +195,67 @@ class ClaimViewSet(viewsets.ModelViewSet):
         pending_claims = Claim.objects.filter(status=ClaimStatus.PENDING)
         serializer = ClaimSerializer(pending_claims, many=True)
         return Response(serializer.data)
+
+
+class RunMatchingView(viewsets.ViewSet):
+    """
+    View to manually trigger the matching algorithm.
+    Admin/Staff only.
+    """
+    permission_classes = [permissions.IsAuthenticated, IsStaffUser]
+
+    @action(detail=False, methods=['post'])
+    def run(self, request):
+        """Run matching algorithm for all active lost items."""
+        from nlp_service.matching import find_matches_for_lost_item
+        from items.models import LostItem
+        from .models import Match, MatchStatus
+
+        # Get all active lost items
+        lost_items = LostItem.objects.filter(status='SEARCHING')
+        
+        results = {
+            'processed': 0,
+            'matches_found': 0,
+            'new_matches': 0
+        }
+
+        for item in lost_items:
+            # Run algorithm
+            matches = find_matches_for_lost_item(item, top_k=5, threshold=0.4)
+            
+            if matches:
+                results['matches_found'] += len(matches)
+                for match_data in matches:
+                    # Create or update match
+                    found_item = match_data['found_item']
+                    match, created = Match.objects.get_or_create(
+                        lost_item=item,
+                        found_item=found_item,
+                        defaults={
+                            'semantic_score': match_data['semantic_score'],
+                            'time_score': match_data['time_score'],
+                            'location_score': match_data['location_score'],
+                            'final_score': match_data['final_score'],
+                            'rank': match_data['rank'],
+                            'status': MatchStatus.POTENTIAL
+                        }
+                    )
+                    
+                    if created:
+                        results['new_matches'] += 1
+                    else:
+                        # Update scores if changed
+                        match.semantic_score = match_data['semantic_score']
+                        match.time_score = match_data['time_score']
+                        match.location_score = match_data['location_score']
+                        match.final_score = match_data['final_score']
+                        match.rank = match_data['rank']
+                        match.save()
+            
+            results['processed'] += 1
+
+        return Response({
+            'message': 'Matching algorithm completed successfully',
+            'stats': results
+        })

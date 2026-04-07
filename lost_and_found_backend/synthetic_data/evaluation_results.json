@@ -1,0 +1,7 @@
+{
+  "total_pairs": 40,
+  "top_1_accuracy_percent": 97.5,
+  "top_3_accuracy_percent": 100.0,
+  "average_precision_at_3_percent": 33.33333333333335,
+  "average_recall_at_3_percent": 100.0
+}

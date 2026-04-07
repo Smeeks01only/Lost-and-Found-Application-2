@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'items',
     'matching',
     'notifications',
+    'nlp_service',
 ]
 
 MIDDLEWARE = [
@@ -220,6 +221,10 @@ CELERY_BEAT_SCHEDULE = {
 NLP_MODEL_NAME = 'all-MiniLM-L6-v2'  # SBERT model for embeddings
 NLP_EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2
 VECTOR_STORE_PATH = BASE_DIR / 'vector_stores'
+
+# ChromaDB (synthetic evaluation / optional vector store)
+CHROMA_PERSIST_PATH = BASE_DIR / 'synthetic_data' / 'chroma'
+CHROMA_COLLECTION_FOUND = 'synthetic_found_items'
 
 # Matching Algorithm Weights
 MATCHING_SEMANTIC_WEIGHT = 0.6

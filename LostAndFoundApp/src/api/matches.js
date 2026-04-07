@@ -35,6 +35,14 @@ export const matchesAPI = {
         return response;
     },
 
+    /**
+     * Trigger matching algorithm manually (admin only)
+     */
+    runMatchingAlgorithm: async () => {
+        const response = await apiClient.post(ENDPOINTS.RUN_MATCHING);
+        return response;
+    },
+
     // ==================== CLAIMS ====================
 
     /**
