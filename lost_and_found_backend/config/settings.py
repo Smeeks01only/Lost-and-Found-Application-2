@@ -218,8 +218,11 @@ CELERY_BEAT_SCHEDULE = {
 
 
 # NLP Service Configuration
-NLP_MODEL_NAME = 'all-MiniLM-L6-v2'  # SBERT model for embeddings
-NLP_EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2
+# Fine-tuned SBERT model (trained on lost & found domain data via Colab)
+# Falls back to base model if the custom model folder doesn't exist yet
+_CUSTOM_MODEL_PATH = BASE_DIR / 'nlp_service' / 'lost_found_custom_model'
+NLP_MODEL_NAME = str(_CUSTOM_MODEL_PATH) if _CUSTOM_MODEL_PATH.exists() else 'all-MiniLM-L6-v2'
+NLP_EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2 (same after fine-tuning)
 VECTOR_STORE_PATH = BASE_DIR / 'vector_stores'
 
 # ChromaDB (synthetic evaluation / optional vector store)

@@ -7,9 +7,15 @@ from django.conf import settings
 from items.models import LostItem, FoundItem, ItemCategory, LostItemStatus, FoundItemStatus
 from accounts.models import User
 from nlp_service.embeddings import embedding_generator
-from nlp_service.vector_store import get_found_items_store, save_found_items_store
 from nlp_service.chroma_vector_store import ChromaVectorStore
 import numpy as np
+
+# FAISS is optional — if not installed, we skip FAISS indexing
+try:
+    from nlp_service.vector_store import get_found_items_store, save_found_items_store
+    FAISS_AVAILABLE = True
+except ImportError:
+    FAISS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +71,9 @@ class Command(BaseCommand):
         
         self.clear_synthetic_data(chroma_store)
 
-        faiss_store = get_found_items_store()
+        faiss_store = get_found_items_store() if FAISS_AVAILABLE else None
+        if not FAISS_AVAILABLE:
+            self.stdout.write(self.style.WARNING("FAISS not available — indexing to ChromaDB only."))
 
         self.stdout.write("Seeding Items from CSV...")
         import csv
@@ -124,10 +132,11 @@ class Command(BaseCommand):
                     text_to_embed = found_item.get_combined_text()
                     embedding = embedding_generator.generate_embedding(text_to_embed)
                     
-                    # Save to FAISS
-                    faiss_id = faiss_store.add_vector(str(found_item.id), embedding)
-                    found_item.embedding_id = faiss_id
-                    found_item.save()
+                    # Save to FAISS (if available)
+                    if faiss_store:
+                        faiss_id = faiss_store.add_vector(str(found_item.id), embedding)
+                        found_item.embedding_id = faiss_id
+                        found_item.save()
                     
                     # Save to ChromaDB
                     chroma_store.upsert(
@@ -137,7 +146,8 @@ class Command(BaseCommand):
                         metadatas=[{"category": found_item.category, "location": found_item.location_found, "synthetic": True, "original_id": item_id}]
                     )
 
-        save_found_items_store()
+        if FAISS_AVAILABLE:
+            save_found_items_store()
         self.stdout.write(self.style.SUCCESS('Successfully seeded synthetic dataset!'))
 
     def clear_synthetic_data(self, chroma_store=None):
