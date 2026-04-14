@@ -35,6 +35,13 @@ vector_stores/
 *.faiss
 *.pkl
 models/
+*.safetensors
+*.bin
+*.pt
+*.onnx
+
+# ChromaDB data (regenerated via seed command)
+synthetic_data/chroma/
 
 # Celery
 celerybeat-schedule
