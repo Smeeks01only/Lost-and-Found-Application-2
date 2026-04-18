@@ -15,6 +15,7 @@ import {
     TextInput,
     Modal,
     ScrollView,
+    Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,6 +28,7 @@ export default function FoundItemsScreen({ navigation }) {
     const [foundItems, setFoundItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newItem, setNewItem] = useState({
         title: '',
@@ -62,13 +64,24 @@ export default function FoundItemsScreen({ navigation }) {
 
     const handleCreateItem = async () => {
         if (!newItem.title || !newItem.category || !newItem.location_found) {
-            Alert.alert('Error', 'Please fill in all required fields');
+            if (Platform.OS === 'web') {
+                window.alert('Please fill in all required fields');
+            } else {
+                Alert.alert('Error', 'Please fill in all required fields');
+            }
             return;
         }
 
+        setIsSaving(true);
         try {
             await itemsAPI.createFoundItem(newItem);
-            Alert.alert('Success', 'Found item created successfully');
+            
+            if (Platform.OS === 'web') {
+                window.alert('Found item created successfully');
+            } else {
+                Alert.alert('Success', 'Found item created successfully');
+            }
+            
             setShowCreateModal(false);
             setNewItem({
                 title: '',
@@ -82,7 +95,13 @@ export default function FoundItemsScreen({ navigation }) {
             loadFoundItems();
         } catch (error) {
             console.error('Error creating found item:', error);
-            Alert.alert('Error', 'Failed to create found item');
+            if (Platform.OS === 'web') {
+                window.alert('Failed to create found item');
+            } else {
+                Alert.alert('Error', 'Failed to create found item');
+            }
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -153,12 +172,14 @@ export default function FoundItemsScreen({ navigation }) {
             >
                 <SafeAreaView style={styles.modalContainer}>
                     <View style={styles.modalHeader}>
-                        <TouchableOpacity onPress={() => setShowCreateModal(false)}>
+                        <TouchableOpacity onPress={() => setShowCreateModal(false)} disabled={isSaving}>
                             <Text style={styles.cancelButton}>Cancel</Text>
                         </TouchableOpacity>
                         <Text style={styles.modalTitle}>Add Found Item</Text>
-                        <TouchableOpacity onPress={handleCreateItem}>
-                            <Text style={styles.saveButton}>Save</Text>
+                        <TouchableOpacity onPress={handleCreateItem} disabled={isSaving}>
+                            <Text style={[styles.saveButton, isSaving && { opacity: 0.5 }]}>
+                                {isSaving ? 'Saving...' : 'Save'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 

@@ -219,7 +219,7 @@ def find_matches_for_lost_item(lost_item, top_k: int = 10, threshold: float = 0.
         List of match data with scores
     """
     from .embeddings import embedding_generator
-    from .vector_store import get_found_items_store
+    from .chroma_vector_store import get_found_items_chroma_store
     from items.models import FoundItem
     from django.conf import settings
     
@@ -235,9 +235,20 @@ def find_matches_for_lost_item(lost_item, top_k: int = 10, threshold: float = 0.
     lost_text = lost_item.get_combined_text()
     lost_embedding = embedding_generator.generate_embedding(lost_text)
     
-    # Search vector store
-    vector_store = get_found_items_store()
-    similar_items = vector_store.search(lost_embedding, top_k=top_k * 2)
+    # Search Chroma vector store
+    chroma_store = get_found_items_chroma_store()
+    search_results = chroma_store.query(lost_embedding, top_k=top_k * 2)
+    
+    similar_items = []
+    if search_results and search_results.ids:
+        for idx, item_id in enumerate(search_results.ids):
+            dist = search_results.distances[idx]
+            similarity = 1.0 / (1.0 + float(dist))
+            similar_items.append({
+                'item_id': item_id,
+                'distance': float(dist),
+                'similarity': similarity
+            })
     
     if not similar_items:
         logger.info(f"No similar items found for lost item {lost_item.id}")

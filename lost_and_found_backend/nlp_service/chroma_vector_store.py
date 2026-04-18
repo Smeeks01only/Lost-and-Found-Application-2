@@ -144,3 +144,10 @@ class ChromaVectorStore:
         ids = (res.get("ids") or [[]])[0]
         distances = (res.get("distances") or [[]])[0]
         return ChromaQueryResult(ids=list(ids), distances=[float(d) for d in distances])
+
+def get_found_items_chroma_store() -> ChromaVectorStore:
+    from django.conf import settings
+    import os
+    store_path = getattr(settings, 'VECTOR_STORE_PATH', 'vector_stores')
+    chroma_path = os.path.join(str(store_path), 'chroma')
+    return ChromaVectorStore(persist_path=chroma_path, collection_name='found_items')

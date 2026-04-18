@@ -11,6 +11,7 @@ import {
     Alert,
     ScrollView,
     Image,
+    Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,14 +22,21 @@ export default function ProfileScreen({ navigation }) {
     const { user, logout } = useAuth();
 
     const handleLogout = () => {
-        Alert.alert(
-            'Logout',
-            'Are you sure you want to logout?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Logout', style: 'destructive', onPress: logout },
-            ]
-        );
+        if (Platform.OS === 'web') {
+            const confirmLogout = window.confirm('Are you sure you want to logout?');
+            if (confirmLogout) {
+                logout();
+            }
+        } else {
+            Alert.alert(
+                'Logout',
+                'Are you sure you want to logout?',
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Logout', style: 'destructive', onPress: logout },
+                ]
+            );
+        }
     };
 
     const MenuOption = ({ icon, title, subtitle, onPress, showBorder = true, isDestructive = false }) => (
