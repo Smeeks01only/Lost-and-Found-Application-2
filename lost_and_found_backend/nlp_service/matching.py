@@ -278,7 +278,53 @@ def find_matches_for_lost_item(lost_item, top_k: int = 10, threshold: float = 0.
     filtered_matches = [
         match for match in ranked_matches
         if match['final_score'] >= threshold
-    ][:top_k]
+    ]
     
-    logger.info(f"Found {len(filtered_matches)} matches for lost item {lost_item.id}")
-    return filtered_matches
+    return filtered_matches[:top_k]
+
+def execute_matching_algorithm(lost_item=None):
+    """
+    Executes the matching algorithm and creates/updates Match objects in the database.
+    If lost_item is provided, only runs for that item.
+    If lost_item is None, runs for all active SEARCHING items.
+    """
+    from items.models import LostItem
+    from matching.models import Match, MatchStatus
+    
+    if lost_item is not None:
+        if lost_item.status != 'SEARCHING':
+            return
+        items_to_process = [lost_item]
+    else:
+        items_to_process = list(LostItem.objects.filter(status='SEARCHING'))
+        
+    for item in items_to_process:
+        try:
+            matches = find_matches_for_lost_item(item, top_k=5, threshold=0.4)
+            if matches:
+                for match_data in matches:
+                    found_item = match_data['found_item']
+                    match, created = Match.objects.get_or_create(
+                        lost_item=item,
+                        found_item=found_item,
+                        defaults={
+                            'semantic_score': match_data['semantic_score'],
+                            'time_score': match_data['time_score'],
+                            'location_score': match_data['location_score'],
+                            'final_score': match_data['final_score'],
+                            'rank': match_data['rank'],
+                            'status': MatchStatus.POTENTIAL
+                        }
+                    )
+                    
+                    if not created:
+                        match.semantic_score = match_data['semantic_score']
+                        match.time_score = match_data['time_score']
+                        match.location_score = match_data['location_score']
+                        match.final_score = match_data['final_score']
+                        match.rank = match_data['rank']
+                        match.save()
+        except Exception as e:
+            logger.error(f"Error during proactive matching for lost item {item.id}: {e}")
+    
+    logger.info("Proactive matching completed.")

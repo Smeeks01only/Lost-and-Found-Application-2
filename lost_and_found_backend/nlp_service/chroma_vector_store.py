@@ -149,5 +149,6 @@ def get_found_items_chroma_store() -> ChromaVectorStore:
     from django.conf import settings
     import os
     store_path = getattr(settings, 'VECTOR_STORE_PATH', 'vector_stores')
-    chroma_path = os.path.join(str(store_path), 'chroma')
+    # Use a new directory to bypass the corrupted, locked sqlite database
+    chroma_path = os.path.join(str(store_path), 'chroma_new')
     return ChromaVectorStore(persist_path=chroma_path, collection_name='found_items')

@@ -31,15 +31,16 @@ class Command(BaseCommand):
             self.stdout.write(f"[{index}/{total}] Processing: {item.title}")
             
             try:
+                import numpy as np
                 embedding = embedding_generator.generate_embedding(text)
                 metadata = {
-                    "status": item.status,
-                    "category": item.category,
+                    "status": str(item.status) if item.status else "",
+                    "category": str(item.category) if item.category else "",
                 }
                 
                 chroma_store.upsert(
                     ids=[str(item.id)],
-                    embeddings=embedding,
+                    embeddings=np.array([embedding]),
                     documents=[text],
                     metadatas=[metadata]
                 )
