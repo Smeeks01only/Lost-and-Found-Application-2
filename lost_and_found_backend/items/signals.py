@@ -35,22 +35,12 @@ def generate_found_item_embedding(sender, instance, created, **kwargs):
         text = instance.get_combined_text()
         embedding = embedding_generator.generate_embedding(text)
         
-        import numpy as np
+        from nlp_service.vector_store import get_found_items_store, save_found_items_store
         
-        # Add to ChromaDB vector store
-        chroma_store = get_found_items_chroma_store()
-        # Create minimal metadata
-        metadata = {
-            "status": str(instance.status) if instance.status else "",
-            "category": str(instance.category) if instance.category else "",
-        }
-        
-        chroma_store.upsert(
-            ids=[str(instance.id)],
-            embeddings=np.array([embedding]),
-            documents=[text],
-            metadatas=[metadata]
-        )
+        # Add to FAISS vector store
+        faiss_store = get_found_items_store()
+        faiss_store.add_vector(str(instance.id), embedding)
+        save_found_items_store()
         
         action = "Created" if created else "Updated"
         logger.info(f"{action} embedding for found item {instance.id}")
@@ -86,12 +76,14 @@ def remove_found_item_embedding(sender, instance, **kwargs):
     Remove embedding from vector store when found item is deleted.
     """
     try:
-        from nlp_service.chroma_vector_store import get_found_items_chroma_store
+        from nlp_service.vector_store import get_found_items_store, save_found_items_store
         
-        chroma_store = get_found_items_chroma_store()
-        # ChromaDB API uses collection.delete(ids=[...])
-        chroma_store.collection.delete(ids=[str(instance.id)])
-        logger.info(f"Removed embedding for found item {instance.id}")
+        faiss_store = get_found_items_store()
+        if faiss_store.remove_vector(str(instance.id)):
+            save_found_items_store()
+            logger.info(f"Removed embedding for found item {instance.id}")
+        else:
+            logger.debug(f"Embedding for found item {instance.id} not found in store")
         
     except Exception as e:
         logger.error(f"Error removing embedding for found item {instance.id}: {e}")

@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 // Base URL for the backend API
 const getBaseUrl = () => {
     if (Platform.OS === 'web') return 'http://localhost:8000/api/v1';
-    if (Platform.OS === 'android') return 'http://192.168.1.101:8000/api/v1'; // Physical device IP
+    if (Platform.OS === 'android') return 'http://192.168.1.104:8000/api/v1'; // Physical device IP
     // if (Platform.OS === 'android') return 'http://10.0.2.2:8000/api/v1'; // Emulator default
 
     return 'http://localhost:8000/api/v1'; // iOS Simulator default
