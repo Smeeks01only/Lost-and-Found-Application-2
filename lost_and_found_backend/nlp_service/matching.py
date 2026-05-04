@@ -135,7 +135,8 @@ class SemanticMatcher:
         location_score: float
     ) -> float:
         """
-        Calculate weighted final score.
+        Calculate final score using pure semantic score as per v3 model guidelines.
+        Metadata filtering is handled separately.
         
         Args:
             semantic_score: Semantic similarity (0 to 1)
@@ -145,11 +146,7 @@ class SemanticMatcher:
         Returns:
             Final weighted score (0 to 1)
         """
-        final_score = (
-            self.w_semantic * semantic_score +
-            self.w_time * time_score +
-            self.w_location * location_score
-        )
+        final_score = semantic_score
         return min(max(final_score, 0.0), 1.0)  # Clamp to [0, 1]
     
     def rank_matches(
@@ -247,7 +244,8 @@ def find_matches_for_lost_item(lost_item, top_k: int = 10, threshold: float = 0.
     found_item_ids = [item['item_id'] for item in similar_items]
     found_items = FoundItem.objects.filter(
         id__in=found_item_ids,
-        status='AVAILABLE'
+        status='AVAILABLE',
+        category=lost_item.category
     )
     
     # Create similarity mapping

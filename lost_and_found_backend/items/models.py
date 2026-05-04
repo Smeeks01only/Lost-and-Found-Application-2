@@ -11,6 +11,22 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from datetime import timedelta
+import re
+
+COLOR_NORMALISER = {
+    'dark': 'black', 'navy blue': 'navy', 'maroon': 'red',
+    'dark red': 'red', 'dark green': 'green', 'silver': 'grey',
+    'off-white': 'white', 'cream': 'white', 'charcoal': 'grey',
+}
+
+def normalise_text_colors(text):
+    if not text:
+        return ''
+    text = str(text)
+    for old_color, new_color in COLOR_NORMALISER.items():
+        # Use regex to replace whole words only, case-insensitive
+        text = re.sub(rf'\b{old_color}\b', new_color, text, flags=re.IGNORECASE)
+    return text
 
 
 class ItemCategory(models.TextChoices):
@@ -68,6 +84,18 @@ class LostItem(models.Model):
         max_length=20,
         choices=ItemCategory.choices,
         default=ItemCategory.OTHER
+    )
+    brand = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        help_text='Brand of the item (if applicable)'
+    )
+    color = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        help_text='Primary color of the item'
     )
     
     # Location and time information
@@ -144,7 +172,30 @@ class LostItem(models.Model):
     
     def get_combined_text(self):
         """Get combined text for embedding generation."""
-        return f"{self.title} {self.description} {self.category} {self.location_lost}"
+        def clean(text):
+            return str(text).strip() if text else ''
+            
+        # Clean title and description
+        title = clean(self.title)
+        desc = clean(self.description)
+        brand_val = clean(self.brand)
+        color_val = clean(self.color)
+        
+        # If color field is populated, we can append it to title/desc for normalization,
+        # but the prompt implies applying normalization directly to title/desc
+        title = normalise_text_colors(title)
+        desc = normalise_text_colors(desc)
+        if color_val:
+            # Also normalize the explicit color field
+            color_val = normalise_text_colors(color_val)
+            # Integrate color into description if it exists
+            desc = f"Color: {color_val}. {desc}"
+        
+        parts = []
+        if title: parts.append(f'item: {title}')
+        if brand_val: parts.append(f'brand: {brand_val}')
+        if desc:  parts.append(f'description: {desc[:300]}')
+        return ' '.join(parts) or 'unknown item'
 
 
 class FoundItem(models.Model):
@@ -159,7 +210,6 @@ class FoundItem(models.Model):
         related_name='found_items'
     )
     
-    # Item details
     title = models.CharField(max_length=200)
     description = models.TextField(
         help_text='Provide a detailed description of the found item'
@@ -168,6 +218,18 @@ class FoundItem(models.Model):
         max_length=20,
         choices=ItemCategory.choices,
         default=ItemCategory.OTHER
+    )
+    brand = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        help_text='Brand of the item (if applicable)'
+    )
+    color = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        help_text='Primary color of the item'
     )
     
     # Location and time information
@@ -241,4 +303,24 @@ class FoundItem(models.Model):
     
     def get_combined_text(self):
         """Get combined text for embedding generation."""
-        return f"{self.title} {self.description} {self.category} {self.location_found}"
+        def clean(text):
+            return str(text).strip() if text else ''
+            
+        # Clean title and description
+        title = clean(self.title)
+        desc = clean(self.description)
+        brand_val = clean(self.brand)
+        color_val = clean(self.color)
+        
+        # Normalize colors
+        title = normalise_text_colors(title)
+        desc = normalise_text_colors(desc)
+        if color_val:
+            color_val = normalise_text_colors(color_val)
+            desc = f"Color: {color_val}. {desc}"
+        
+        parts = []
+        if title: parts.append(f'item: {title}')
+        if brand_val: parts.append(f'brand: {brand_val}')
+        if desc:  parts.append(f'description: {desc[:300]}')
+        return ' '.join(parts) or 'unknown item'

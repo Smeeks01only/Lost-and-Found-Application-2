@@ -6,7 +6,7 @@ from django.conf import settings
 from items.models import LostItem, FoundItem
 from nlp_service.matching import SemanticMatcher, find_matches_for_lost_item
 from nlp_service.embeddings import embedding_generator
-from nlp_service.chroma_vector_store import ChromaVectorStore
+from nlp_service.vector_store import get_found_items_store
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Starting Evaluation Pipeline from CSV...")
         
-        dataset_path = os.path.join(settings.BASE_DIR, 'synthetic_data', 'lost_found_ground_truth_matches.csv')
+        dataset_path = os.path.join(settings.BASE_DIR, 'synthetic_data', 'wdc_test_split.csv')
         
         import csv
         ground_truth = []
@@ -30,10 +30,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("No ground truth pairs found in dataset."))
             return
 
-        # We will test using ChromaDB and the full matching strategy
-        collection_name = getattr(settings, 'CHROMA_COLLECTION_FOUND', 'synthetic_found_items')
-        persist_path = getattr(settings, 'CHROMA_PERSIST_PATH', os.path.join(settings.BASE_DIR, 'synthetic_data', 'chroma'))
-        chroma_store = ChromaVectorStore(persist_path=persist_path, collection_name=collection_name)
+        # We will test using FAISS and the full matching strategy
+        faiss_store = get_found_items_store()
         
         # Load synthetic items from DB and index by title
         lost_items_query = LostItem.objects.filter(title__startswith='[SYNTHETIC]')
@@ -74,18 +72,17 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Item not found in DB for pair {lost_id}-{found_id}"))
                 continue
             
-            # Use ChromaDB to get candidates (Top 10)
+            # Use FAISS to get candidates (Top 10)
             lost_text = lost_item.get_combined_text()
             lost_embedding = embedding_generator.generate_embedding(lost_text)
-            query_res = chroma_store.query(lost_embedding, top_k=10)
+            query_res = faiss_store.search(lost_embedding, top_k=10)
             
-            # Map ChromaDB results to actual FoundItems and calculate full score
+            # Map FAISS results to actual FoundItems and calculate full score
             candidates_with_scores = []
-            for i, found_item_id_str in enumerate(query_res.ids):
-                # We need the actual FoundItem object from DB
+            for item_data in query_res:
                 try:
-                    candidate_item = FoundItem.objects.get(id=found_item_id_str)
-                    semantic_sim = query_res.similarities()[i]
+                    candidate_item = FoundItem.objects.get(id=item_data['item_id'])
+                    semantic_sim = item_data['similarity']
                     candidates_with_scores.append((candidate_item, semantic_sim))
                 except FoundItem.DoesNotExist:
                     continue

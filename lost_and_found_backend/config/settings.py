@@ -220,9 +220,9 @@ CELERY_BEAT_SCHEDULE = {
 # NLP Service Configuration
 # Fine-tuned SBERT model (trained on lost & found domain data via Colab)
 # Falls back to base model if the custom model folder doesn't exist yet
-_CUSTOM_MODEL_PATH = BASE_DIR / 'nlp_service' / 'lost_found_custom_model'
+_CUSTOM_MODEL_PATH = BASE_DIR / 'nlp_service' / 'lost_found_model_v3'
 NLP_MODEL_NAME = str(_CUSTOM_MODEL_PATH) if _CUSTOM_MODEL_PATH.exists() else 'all-MiniLM-L6-v2'
-NLP_EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2 (same after fine-tuning)
+NLP_EMBEDDING_DIMENSION = 768  # Dimension for the v3 model
 VECTOR_STORE_PATH = BASE_DIR / 'vector_stores'
 
 # ChromaDB (synthetic evaluation / optional vector store)
@@ -233,7 +233,7 @@ CHROMA_COLLECTION_FOUND = 'synthetic_found_items'
 MATCHING_SEMANTIC_WEIGHT = 0.6
 MATCHING_TIME_WEIGHT = 0.2
 MATCHING_LOCATION_WEIGHT = 0.2
-MATCHING_THRESHOLD = 0.5  # Minimum score to consider a match
+MATCHING_THRESHOLD = 0.66  # Minimum score to consider a match
 
 # Lost Item Search Configuration
 LOST_ITEM_SEARCH_PERIOD_DAYS = 30  # Days to keep searching for matches
