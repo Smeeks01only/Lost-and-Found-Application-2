@@ -13,6 +13,7 @@ import {
     ActivityIndicator,
     Alert,
     Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { itemsAPI } from '../../api';
 import { CATEGORIES, COLORS } from '../../constants';
@@ -56,11 +57,16 @@ export default function ReportLostItemScreen({ navigation }) {
         setIsLoading(true);
         try {
             await itemsAPI.createLostItem(formData);
-            Alert.alert(
-                'Success',
-                'Your lost item has been reported. We will notify you when we find potential matches!',
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-            );
+            if (Platform.OS === 'web') {
+                window.alert('Success: Your lost item has been reported. We will notify you when we find potential matches!');
+                navigation.goBack();
+            } else {
+                Alert.alert(
+                    'Success',
+                    'Your lost item has been reported. We will notify you when we find potential matches!',
+                    [{ text: 'OK', onPress: () => navigation.goBack() }]
+                );
+            }
         } catch (error) {
             console.error('Error creating item:', error);
             Alert.alert('Error', 'Failed to report item. Please try again.');
@@ -72,8 +78,18 @@ export default function ReportLostItemScreen({ navigation }) {
     const selectedCategory = CATEGORIES.find((c) => c.value === formData.category);
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.content}>
+        <KeyboardAvoidingView 
+            style={{ flex: 1 }} 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 20}
+        >
+            <ScrollView 
+                style={styles.container}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 60 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.content}>
                 {/* Title */}
                 <View style={styles.inputContainer}>
                     <Text style={styles.label}>Item Title *</Text>
@@ -193,7 +209,8 @@ export default function ReportLostItemScreen({ navigation }) {
                     )}
                 </TouchableOpacity>
             </View>
-        </ScrollView>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 

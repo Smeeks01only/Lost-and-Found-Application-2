@@ -16,6 +16,7 @@ import {
     Modal,
     ScrollView,
     Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -183,7 +184,16 @@ export default function FoundItemsScreen({ navigation }) {
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView style={styles.form}>
+                    <KeyboardAvoidingView 
+                        style={{ flex: 1 }} 
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    >
+                        <ScrollView 
+                            style={styles.form}
+                            contentContainerStyle={{ flexGrow: 1, paddingBottom: 60 }}
+                            keyboardShouldPersistTaps="handled"
+                            showsVerticalScrollIndicator={false}
+                        >
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Title *</Text>
                             <TextInput
@@ -271,6 +281,7 @@ export default function FoundItemsScreen({ navigation }) {
                             />
                         </View>
                     </ScrollView>
+                    </KeyboardAvoidingView>
                 </SafeAreaView>
             </Modal>
         </SafeAreaView>

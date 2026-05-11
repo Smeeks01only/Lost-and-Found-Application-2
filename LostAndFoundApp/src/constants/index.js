@@ -3,13 +3,23 @@
  */
 
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Base URL for the backend API
 const getBaseUrl = () => {
     if (Platform.OS === 'web') return 'http://localhost:8000/api/v1';
-    if (Platform.OS === 'android') return 'http://192.168.1.105:8000/api/v1'; // Physical device IP
-    // if (Platform.OS === 'android') return 'http://10.0.2.2:8000/api/v1'; // Emulator default
-
+    
+    // Dynamically get the IP address from Expo's Metro bundler connection
+    // This allows the physical device to always find your computer on the local network automatically!
+    const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost || Constants.manifest2?.extra?.expoGo?.debuggerHost;
+    
+    if (debuggerHost) {
+        const ip = debuggerHost.split(':')[0];
+        return `http://${ip}:8000/api/v1`;
+    }
+    
+    // Fallbacks
+    if (Platform.OS === 'android') return 'http://10.0.2.2:8000/api/v1'; // Emulator default
     return 'http://localhost:8000/api/v1'; // iOS Simulator default
 };
 

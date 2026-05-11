@@ -12,7 +12,10 @@ import {
     ScrollView,
     ActivityIndicator,
     Alert,
+    Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { matchesAPI } from '../../api';
 import { COLORS } from '../../constants';
 // import { useTheme } from '../../context/ThemeContext'; // Removed
@@ -57,17 +60,26 @@ export default function SubmitClaimScreen({ route, navigation }) {
             });
 
             if (response.is_correct_answer) {
-                Alert.alert(
-                    '✅ Correct Answer!',
-                    response.message,
-                    [{ text: 'OK', onPress: () => navigation.goBack() }]
-                );
+                if (Platform.OS === 'web') {
+                    window.alert(`Verification Successful\n\n${response.message}`);
+                    navigation.goBack();
+                } else {
+                    Alert.alert(
+                        'Verification Successful',
+                        response.message,
+                        [{ text: 'OK', onPress: () => navigation.goBack() }]
+                    );
+                }
             } else {
-                Alert.alert(
-                    '❌ Incorrect Answer',
-                    `${response.message}\n\nAttempts remaining: ${response.attempts_remaining}`,
-                    [{ text: 'Try Again' }]
-                );
+                if (Platform.OS === 'web') {
+                    window.alert(`Verification Failed\n\n${response.message}\n\nAttempts remaining: ${response.attempts_remaining}`);
+                } else {
+                    Alert.alert(
+                        'Verification Failed',
+                        `${response.message}\n\nAttempts remaining: ${response.attempts_remaining}`,
+                        [{ text: 'Try Again' }]
+                    );
+                }
                 setSecretAnswer('');
             }
         } catch (error) {
@@ -88,7 +100,17 @@ export default function SubmitClaimScreen({ route, navigation }) {
     }
 
     return (
-        <ScrollView style={styles.container}>
+        <KeyboardAvoidingView 
+            style={{ flex: 1 }} 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 20}
+        >
+            <ScrollView 
+                style={styles.container}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 60 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
             <View style={styles.content}>
                 {/* Match Info */}
                 <View style={styles.infoCard}>
@@ -96,9 +118,12 @@ export default function SubmitClaimScreen({ route, navigation }) {
                     <Text style={styles.infoItemTitle}>
                         {match?.found_item?.title || match?.found_item_title || 'Item'}
                     </Text>
-                    <Text style={styles.infoLocation}>
-                        📍 {match?.found_item?.location_found || match?.found_item_location || 'Location'}
-                    </Text>
+                    <View style={styles.locationContainer}>
+                        <MaterialCommunityIcons name="map-marker-outline" size={16} color={COLORS.textSecondary} style={{ marginRight: 4 }} />
+                        <Text style={styles.infoLocation}>
+                            {match?.found_item?.location_found || match?.found_item_location || 'Not specified'}
+                        </Text>
+                    </View>
                 </View>
 
                 {/* Secret Question */}
@@ -155,12 +180,14 @@ export default function SubmitClaimScreen({ route, navigation }) {
 
                 {/* Warning */}
                 <View style={styles.warning}>
+                    <MaterialCommunityIcons name="shield-alert-outline" size={20} color={COLORS.warning || '#D97706'} style={{ marginRight: 8 }} />
                     <Text style={styles.warningText}>
-                        ⚠️ You have 3 attempts to answer correctly. False claims may result in account restrictions.
+                        Important: You have 3 attempts to answer correctly. False claims may result in account restrictions.
                     </Text>
                 </View>
             </View>
-        </ScrollView>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -267,10 +294,17 @@ const styles = StyleSheet.create({
         padding: 12,
         backgroundColor: COLORS.warningFaded,
         borderRadius: 8,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
     },
     warningText: {
         fontSize: 13,
         color: COLORS.warning,
-        textAlign: 'center',
+        flex: 1,
+        lineHeight: 18,
+    },
+    locationContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 });
