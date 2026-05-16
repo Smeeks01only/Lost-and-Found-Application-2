@@ -14,6 +14,7 @@ from .views import (
     AdminUserListView,
     AdminUserDetailView,
     AdminUserStatsView,
+    DemoPasswordResetView,
 )
 
 app_name = 'accounts'
@@ -24,6 +25,7 @@ urlpatterns = [
     path('login/', CustomTokenObtainPairView.as_view(), name='login'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('demo-reset-password/', DemoPasswordResetView.as_view(), name='demo_reset_password'),
     
     # Profile
     path('profile/', ProfileView.as_view(), name='profile'),

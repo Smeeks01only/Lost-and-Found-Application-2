@@ -262,7 +262,12 @@ class FoundItem(models.Model):
     secret_answer_hash = models.CharField(
         max_length=255,
         blank=True,
-        help_text='Hashed secret answer'
+        help_text='Hashed secret answer (Legacy)'
+    )
+    secret_answer_raw = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text='Raw secret answer for semantic matching'
     )
     
     # NLP/Vector store references
@@ -292,14 +297,53 @@ class FoundItem(models.Model):
         return f"{self.title} - Found at {self.location_found}"
     
     def set_secret_answer(self, answer):
-        """Hash and store the secret answer."""
+        """Store the secret answer and its hash."""
         self.secret_answer_hash = make_password(answer.lower().strip())
+        self.secret_answer_raw = answer.lower().strip()
     
     def check_secret_answer(self, answer):
-        """Verify a provided answer against the stored hash."""
-        if not self.secret_answer_hash:
+        """Verify a provided answer using multi-layered semantic matching."""
+        if not self.secret_answer_hash and not self.secret_answer_raw:
             return True  # No secret question set
-        return check_password(answer.lower().strip(), self.secret_answer_hash)
+            
+        provided_answer = answer.lower().strip()
+        
+        # 1. Check Legacy Hash (if raw answer isn't available)
+        if not self.secret_answer_raw and self.secret_answer_hash:
+            return check_password(provided_answer, self.secret_answer_hash)
+            
+        stored_answer = self.secret_answer_raw
+        
+        # 2. Exact Match Check
+        if provided_answer == stored_answer:
+            return True
+            
+        # 3. Typo Tolerance (SequenceMatcher)
+        from difflib import SequenceMatcher
+        ratio = SequenceMatcher(None, provided_answer, stored_answer).ratio()
+        if ratio > 0.8:
+            return True
+            
+        # 4. Semantic Similarity (NLP Embeddings)
+        try:
+            from nlp_service.embeddings import EmbeddingGenerator
+            import numpy as np
+            
+            generator = EmbeddingGenerator()
+            emb1 = generator.generate_embedding(provided_answer)
+            emb2 = generator.generate_embedding(stored_answer)
+            
+            if emb1 is not None and emb2 is not None:
+                cosine_sim = generator.compute_similarity(emb1, emb2)
+                if cosine_sim > 0.85:
+                    return True
+        except Exception as e:
+            # Fallback if NLP service fails
+            import logging
+            logging.error(f"Error in semantic checking: {str(e)}")
+            pass
+            
+        return False
     
     def get_combined_text(self):
         """Get combined text for embedding generation."""
