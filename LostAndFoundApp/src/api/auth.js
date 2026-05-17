@@ -65,6 +65,17 @@ export const authAPI = {
         return response;
     },
 
+    /**
+     * Demo Password Reset
+     */
+    demoResetPassword: async (email, newPassword) => {
+        const response = await apiClient.post('/auth/demo-reset-password/', {
+            email,
+            new_password: newPassword,
+        });
+        return response;
+    },
+
     // ==================== Admin User Management ====================
 
     /**

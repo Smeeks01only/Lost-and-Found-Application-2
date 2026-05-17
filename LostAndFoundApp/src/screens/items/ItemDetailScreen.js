@@ -10,7 +10,12 @@ import {
     StyleSheet,
     ScrollView,
     ActivityIndicator,
+    Linking,
+    Platform,
+    Alert,
+    TouchableOpacity,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { itemsAPI } from '../../api';
 import { STATUS_LABELS, COLORS } from '../../constants';
@@ -92,6 +97,30 @@ export default function ItemDetailScreen({ route, navigation }) {
                     <Text style={styles.label}>Category</Text>
                     <Text style={styles.value}>{item.category}</Text>
                 </View>
+
+                {/* WhatsApp Share Button */}
+                <TouchableOpacity
+                    style={styles.whatsappButton}
+                    onPress={() => {
+                        const shareText = `Check out this ${type.toLowerCase()} item on the Lost & Found App: ${item.title}\n\nLocation: ${type === 'FOUND' ? item.location_found : item.location_lost}\nDate: ${new Date(type === 'FOUND' ? item.date_found : item.date_lost).toLocaleDateString()}`;
+                        const url = `whatsapp://send?text=${encodeURIComponent(shareText)}`;
+                        
+                        if (Platform.OS === 'web') {
+                            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`);
+                        } else {
+                            Linking.canOpenURL(url).then(supported => {
+                                if (supported) {
+                                    Linking.openURL(url);
+                                } else {
+                                    Alert.alert('Error', 'Make sure WhatsApp is installed on your device.');
+                                }
+                            });
+                        }
+                    }}
+                >
+                    <MaterialCommunityIcons name="whatsapp" size={24} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.whatsappButtonText}>Share via WhatsApp</Text>
+                </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
     );
@@ -135,10 +164,31 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.textSecondary,
         marginBottom: 4,
+        fontWeight: '500',
     },
     value: {
         fontSize: 16,
         color: COLORS.text,
+        lineHeight: 24,
+    },
+    whatsappButton: {
+        flexDirection: 'row',
+        backgroundColor: '#25D366',
+        borderRadius: 12,
+        padding: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 24,
+        shadowColor: '#25D366',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    whatsappButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     errorText: {
         fontSize: 18,

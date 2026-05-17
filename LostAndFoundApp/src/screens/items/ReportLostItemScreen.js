@@ -11,17 +11,18 @@ import {
     StyleSheet,
     ScrollView,
     ActivityIndicator,
-    Alert,
     Platform,
     KeyboardAvoidingView,
 } from 'react-native';
 import { itemsAPI } from '../../api';
 import { CATEGORIES, COLORS } from '../../constants';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAlert } from '../../context/AlertContext';
 // import { useTheme } from '../../context/ThemeContext'; // Removed
 
 export default function ReportLostItemScreen({ navigation }) {
     // const { theme } = useTheme(); // Removed
+    const { showAlert } = useAlert();
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -57,19 +58,20 @@ export default function ReportLostItemScreen({ navigation }) {
         setIsLoading(true);
         try {
             await itemsAPI.createLostItem(formData);
-            if (Platform.OS === 'web') {
-                window.alert('Success: Your lost item has been reported. We will notify you when we find potential matches!');
-                navigation.goBack();
-            } else {
-                Alert.alert(
-                    'Success',
-                    'Your lost item has been reported. We will notify you when we find potential matches!',
-                    [{ text: 'OK', onPress: () => navigation.goBack() }]
-                );
-            }
+            showAlert({
+                type: 'success',
+                title: 'Item Reported!',
+                message: 'Your lost item has been reported. We will notify you when we find potential matches!',
+                buttons: [{ text: 'Done', onPress: () => navigation.goBack() }],
+            });
         } catch (error) {
             console.error('Error creating item:', error);
-            Alert.alert('Error', 'Failed to report item. Please try again.');
+            showAlert({
+                type: 'error',
+                title: 'Submission Failed',
+                message: 'Failed to report your item. Please try again.',
+                buttons: [{ text: 'OK' }],
+            });
         } finally {
             setIsLoading(false);
         }

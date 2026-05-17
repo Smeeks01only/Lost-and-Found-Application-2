@@ -11,17 +11,18 @@ import {
     TouchableOpacity,
     StyleSheet,
     RefreshControl,
-    Alert,
     ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { notificationsAPI } from '../api';
+import { useAlert } from '../context/AlertContext';
 import { COLORS } from '../constants';
 // import { useTheme } from '../context/ThemeContext'; // Removed
 
 export default function NotificationsScreen({ navigation }) {
     // const { theme } = useTheme(); // Removed
+    const { showAlert } = useAlert();
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -52,10 +53,20 @@ export default function NotificationsScreen({ navigation }) {
         try {
             await notificationsAPI.markAllAsRead();
             loadNotifications();
-            Alert.alert('Success', 'All notifications marked as read');
+            showAlert({
+                type: 'success',
+                title: 'All Caught Up!',
+                message: 'All notifications have been marked as read.',
+                buttons: [{ text: 'OK' }],
+            });
         } catch (error) {
             console.error('Error marking all read:', error);
-            Alert.alert('Error', 'Failed to mark notifications as read');
+            showAlert({
+                type: 'error',
+                title: 'Error',
+                message: 'Failed to mark notifications as read.',
+                buttons: [{ text: 'OK' }],
+            });
         }
     };
 
@@ -82,10 +93,11 @@ export default function NotificationsScreen({ navigation }) {
     };
 
     const handleDelete = async (id) => {
-        Alert.alert(
-            'Delete Notification',
-            'Are you sure you want to delete this notification?',
-            [
+        showAlert({
+            type: 'confirm',
+            title: 'Delete Notification',
+            message: 'Are you sure you want to delete this notification?',
+            buttons: [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Delete',
@@ -95,12 +107,17 @@ export default function NotificationsScreen({ navigation }) {
                             await notificationsAPI.deleteNotification(id);
                             setNotifications(prev => prev.filter(n => n.id !== id));
                         } catch (error) {
-                            Alert.alert('Error', 'Failed to delete notification');
+                            showAlert({
+                                type: 'error',
+                                title: 'Error',
+                                message: 'Failed to delete notification.',
+                                buttons: [{ text: 'OK' }],
+                            });
                         }
                     }
                 }
-            ]
-        );
+            ],
+        });
     };
 
     const getIconForType = (type) => {

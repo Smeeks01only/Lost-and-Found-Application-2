@@ -113,7 +113,7 @@ export default function ClaimsReviewScreen({ navigation }) {
 
                 <View style={styles.claimDetails}>
                     <Text style={styles.detailLabel}>Claimant:</Text>
-                    <Text style={styles.detailValue}>{item.claimant?.full_name || 'Unknown'}</Text>
+                    <Text style={styles.detailValue}>{item.claimant_name || 'Unknown'}</Text>
                 </View>
 
                 <View style={styles.claimDetails}>
@@ -189,7 +189,7 @@ export default function ClaimsReviewScreen({ navigation }) {
                                 </Text>
                                 <Text style={styles.summaryText}>
                                     <Text style={styles.summaryLabel}>Claimant: </Text>
-                                    {selectedClaim.claimant?.full_name}
+                                    {selectedClaim.claimant_name || 'Unknown'}
                                 </Text>
                             </View>
                         )}

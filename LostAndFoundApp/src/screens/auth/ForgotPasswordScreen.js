@@ -1,7 +1,3 @@
-/**
- * Login Screen
- */
-
 import React, { useState } from 'react';
 import {
     View,
@@ -12,18 +8,15 @@ import {
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
-import { useAlert } from '../../context/AlertContext';
 import { COLORS } from '../../constants';
+import { authAPI } from '../../api/auth';
 
-export default function LoginScreen({ navigation }) {
-    const { login } = useAuth();
-    const { showAlert } = useAlert();
-
+export default function ForgotPasswordScreen({ navigation }) {
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
@@ -31,26 +24,32 @@ export default function LoginScreen({ navigation }) {
     const validate = () => {
         const newErrors = {};
         if (!email.trim()) newErrors.email = 'Email is required';
-        else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Invalid email';
-        if (!password) newErrors.password = 'Password is required';
+        else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Invalid email format';
+        if (!newPassword) newErrors.password = 'New password is required';
+        else if (newPassword.length < 6) newErrors.password = 'Password must be at least 6 characters';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleLogin = async () => {
+    const handleReset = async () => {
         if (!validate()) return;
 
         setIsLoading(true);
-        const result = await login(email, password);
-        setIsLoading(false);
-
-        if (!result.success) {
-            showAlert({
-                type: 'error',
-                title: 'Login Failed',
-                message: result.error,
-                buttons: [{ text: 'Try Again' }],
-            });
+        try {
+            const response = await authAPI.demoResetPassword(email, newPassword);
+            if (response.error) {
+                Alert.alert('Reset Failed', response.error);
+            } else {
+                Alert.alert(
+                    'Success',
+                    'Your password has been reset successfully! You can now log in.',
+                    [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+                );
+            }
+        } catch (error) {
+            Alert.alert('Reset Failed', error?.response?.data?.error || 'Failed to connect to the server.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -59,21 +58,24 @@ export default function LoginScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            {/* Top Wavy Background Decoration */}
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <MaterialCommunityIcons name="arrow-left" size={28} color={COLORS.text} />
+            </TouchableOpacity>
+
             <View style={styles.topDecoration} />
             <View style={styles.bottomDecoration} />
 
             <View style={styles.content}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Welcome Back</Text>
+                    <Text style={styles.title}>Reset Password</Text>
                     <Text style={styles.subtitle}>
-                        Sign in to manage your lost & found items
+                        Enter your email and a new password below.
                     </Text>
                 </View>
 
                 <View style={styles.form}>
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Email</Text>
+                        <Text style={styles.label}>Email Address</Text>
                         <TextInput
                             style={[styles.input, errors.email && styles.inputError]}
                             placeholder="Enter your email"
@@ -87,14 +89,14 @@ export default function LoginScreen({ navigation }) {
                     </View>
 
                     <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Password</Text>
+                        <Text style={styles.label}>New Password</Text>
                         <View style={[styles.passwordContainer, errors.password && styles.inputError]}>
                             <TextInput
                                 style={styles.passwordInput}
-                                placeholder="Enter your password"
+                                placeholder="Enter new password"
                                 placeholderTextColor={COLORS.textLight}
-                                value={password}
-                                onChangeText={setPassword}
+                                value={newPassword}
+                                onChangeText={setNewPassword}
                                 secureTextEntry={!isPasswordVisible}
                             />
                             <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
@@ -110,31 +112,15 @@ export default function LoginScreen({ navigation }) {
 
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={handleLogin}
+                        onPress={handleReset}
                         disabled={isLoading}
                     >
                         {isLoading ? (
-                            <ActivityIndicator color={COLORS.surface} />
+                            <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.buttonText}>Sign In</Text>
+                            <Text style={styles.buttonText}>Update Password</Text>
                         )}
                     </TouchableOpacity>
-
-                    <TouchableOpacity 
-                        style={styles.forgotPasswordContainer}
-                        onPress={() => navigation.navigate('ForgotPassword')}
-                    >
-                        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                    </TouchableOpacity>
-
-                    <View style={styles.footer}>
-                        <Text style={styles.footerText}>
-                            Don't have an account?
-                        </Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Register')} style={{ marginTop: 8 }}>
-                            <Text style={styles.link}>Create Account</Text>
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </View>
         </KeyboardAvoidingView>
@@ -146,6 +132,13 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: COLORS.background,
         position: 'relative',
+    },
+    backButton: {
+        position: 'absolute',
+        top: 60,
+        left: 20,
+        zIndex: 10,
+        padding: 10,
     },
     topDecoration: {
         position: 'absolute',
@@ -247,29 +240,5 @@ const styles = StyleSheet.create({
         color: COLORS.surface,
         fontSize: 16,
         fontWeight: '600',
-    },
-    forgotPasswordContainer: {
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    forgotPasswordText: {
-        color: COLORS.textSecondary,
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    footer: {
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 24,
-    },
-    footerText: {
-        color: COLORS.textSecondary,
-        fontSize: 14,
-    },
-    link: {
-        color: COLORS.primary,
-        fontSize: 15,
-        fontWeight: 'bold',
     },
 });

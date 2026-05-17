@@ -12,15 +12,16 @@ import {
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
-    Alert,
     ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useAlert } from '../../context/AlertContext';
 import { COLORS } from '../../constants';
 
 export default function RegisterScreen({ navigation }) {
     const { register } = useAuth();
+    const { showAlert } = useAlert();
 
     const [formData, setFormData] = useState({
         full_name: '',
@@ -68,16 +69,22 @@ export default function RegisterScreen({ navigation }) {
         const result = await register(formData);
 
         if (result.success) {
-            Alert.alert(
-                'Registration Successful',
-                'Your account has been created. Please sign in.',
-                [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-            );
+            showAlert({
+                type: 'success',
+                title: 'Registration Successful!',
+                message: 'Your account has been created. Please sign in to continue.',
+                buttons: [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }],
+            });
         } else {
             if (typeof result.errors === 'object') {
                 setErrors(result.errors);
             } else {
-                Alert.alert('Registration Failed', result.message || 'Please try again');
+                showAlert({
+                    type: 'error',
+                    title: 'Registration Failed',
+                    message: result.message || 'Please try again.',
+                    buttons: [{ text: 'OK' }],
+                });
             }
         }
 
@@ -89,6 +96,10 @@ export default function RegisterScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
+            {/* Wavy Background Decorations */}
+            <View style={styles.topDecoration} />
+            <View style={styles.bottomDecoration} />
+
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.content}>
                     {/* Header */}
@@ -139,6 +150,17 @@ export default function RegisterScreen({ navigation }) {
                                 keyboardType="phone-pad"
                             />
                             {errors.phone_number && <Text style={styles.errorText}>{errors.phone_number}</Text>}
+                        </View>
+
+                        {/* Role (Read-only) */}
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Account Role</Text>
+                            <View style={[styles.input, styles.disabledInput]}>
+                                <Text style={styles.disabledText}>Loser (Default)</Text>
+                            </View>
+                            <Text style={styles.helperText}>
+                                To request Office or Tech roles, please contact an Admin.
+                            </Text>
                         </View>
 
                         {/* Password */}
@@ -203,8 +225,8 @@ export default function RegisterScreen({ navigation }) {
 
                         {/* Login Link */}
                         <View style={styles.footer}>
-                            <Text style={styles.footerText}>Already have an account? </Text>
-                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                            <Text style={styles.footerText}>Already have an account?</Text>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')} style={{ marginTop: 8 }}>
                                 <Text style={styles.link}>Sign In</Text>
                             </TouchableOpacity>
                         </View>
@@ -219,6 +241,27 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.background,
+        position: 'relative',
+    },
+    topDecoration: {
+        position: 'absolute',
+        top: -150,
+        left: -50,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: COLORS.primary,
+        opacity: 0.1,
+    },
+    bottomDecoration: {
+        position: 'absolute',
+        bottom: -200,
+        right: -100,
+        width: 400,
+        height: 400,
+        borderRadius: 200,
+        backgroundColor: COLORS.primary,
+        opacity: 0.1,
     },
     scrollContent: {
         flexGrow: 1,
@@ -261,6 +304,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: COLORS.text,
         backgroundColor: COLORS.surface,
+    },
+    disabledInput: {
+        backgroundColor: '#EAEAEA',
+        justifyContent: 'center',
+    },
+    disabledText: {
+        fontSize: 16,
+        color: COLORS.textSecondary,
+    },
+    helperText: {
+        fontSize: 12,
+        color: COLORS.textLight,
+        marginTop: 6,
+        fontStyle: 'italic',
     },
     passwordContainer: {
         flexDirection: 'row',
@@ -305,9 +362,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     footer: {
-        flexDirection: 'row',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
+        marginTop: 24,
     },
     footerText: {
         color: COLORS.textSecondary,
@@ -315,7 +373,7 @@ const styles = StyleSheet.create({
     },
     link: {
         color: COLORS.primary,
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 15,
+        fontWeight: 'bold',
     },
 });

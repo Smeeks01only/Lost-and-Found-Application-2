@@ -2,42 +2,76 @@
  * Profile Screen
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     TouchableOpacity,
-    Alert,
     ScrollView,
     Image,
     Platform,
     Linking,
+    Modal,
+    TextInput,
+    ActivityIndicator,
+    KeyboardAvoidingView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { useAlert } from '../context/AlertContext';
 import { COLORS } from '../constants';
 
 export default function ProfileScreen({ navigation }) {
-    const { user, logout } = useAuth();
+    const { user, logout, updateProfile } = useAuth();
+    const { showAlert } = useAlert();
+    
+    // Edit Profile State
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editForm, setEditForm] = useState({
+        full_name: '',
+        email: '',
+        phone_number: '',
+    });
+
+    const handleEditPress = () => {
+        setEditForm({
+            full_name: user?.full_name || '',
+            email: user?.email || '',
+            phone_number: user?.phone_number || '',
+        });
+        setIsEditing(true);
+    };
+
+    const handleSaveProfile = async () => {
+        setIsSaving(true);
+        const result = await updateProfile(editForm);
+        setIsSaving(false);
+        
+        if (result.success) {
+            setIsEditing(false);
+        } else {
+            showAlert({
+                type: 'error',
+                title: 'Update Failed',
+                message: 'Could not update your profile. Please try again.',
+                buttons: [{ text: 'OK' }],
+            });
+        }
+    };
 
     const handleLogout = () => {
-        if (Platform.OS === 'web') {
-            const confirmLogout = window.confirm('Are you sure you want to logout?');
-            if (confirmLogout) {
-                logout();
-            }
-        } else {
-            Alert.alert(
-                'Logout',
-                'Are you sure you want to logout?',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Logout', style: 'destructive', onPress: logout },
-                ]
-            );
-        }
+        showAlert({
+            type: 'confirm',
+            title: 'Log Out',
+            message: 'Are you sure you want to log out of your account?',
+            buttons: [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Log Out', style: 'destructive', onPress: logout },
+            ],
+        });
     };
 
     const MenuOption = ({ icon, title, subtitle, onPress, showBorder = true, isDestructive = false }) => (
@@ -63,8 +97,8 @@ export default function ProfileScreen({ navigation }) {
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Profile</Text>
-                <TouchableOpacity style={styles.headerIcon}>
-                    <MaterialCommunityIcons name="dots-horizontal" size={24} color={COLORS.text} />
+                <TouchableOpacity style={styles.headerEditBtn} onPress={handleEditPress}>
+                    <Text style={styles.headerEditText}>Edit</Text>
                 </TouchableOpacity>
             </View>
 
@@ -92,39 +126,104 @@ export default function ProfileScreen({ navigation }) {
                     </View>
                 </View>
 
+                {/* Edit Profile Modal */}
+                <Modal visible={isEditing} animationType="slide" transparent={true}>
+                    <View style={styles.modalOverlay}>
+                        <KeyboardAvoidingView 
+                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+                            style={styles.modalContent}
+                        >
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Edit Profile</Text>
+                                <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.modalCloseBtn}>
+                                    <MaterialCommunityIcons name="close" size={24} color={COLORS.text} />
+                                </TouchableOpacity>
+                            </View>
+
+                            <ScrollView style={styles.modalBody}>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.label}>Full Name</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editForm.full_name}
+                                        onChangeText={(text) => setEditForm({...editForm, full_name: text})}
+                                        placeholder="Enter your full name"
+                                    />
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.label}>Email Address</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editForm.email}
+                                        onChangeText={(text) => setEditForm({...editForm, email: text})}
+                                        placeholder="Enter your email"
+                                        keyboardType="email-address"
+                                        autoCapitalize="none"
+                                    />
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.label}>Phone Number</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editForm.phone_number}
+                                        onChangeText={(text) => setEditForm({...editForm, phone_number: text})}
+                                        placeholder="Enter your phone number"
+                                        keyboardType="phone-pad"
+                                    />
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.label}>Account Role</Text>
+                                    <View style={[styles.input, styles.disabledInput]}>
+                                        <Text style={styles.disabledText}>{user?.role || 'LOSER'}</Text>
+                                    </View>
+                                    <Text style={styles.helperText}>Roles cannot be changed manually.</Text>
+                                </View>
+                            </ScrollView>
+
+                            <View style={styles.modalFooter}>
+                                <TouchableOpacity 
+                                    style={styles.saveBtn} 
+                                    onPress={handleSaveProfile}
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? (
+                                        <ActivityIndicator color={COLORS.surface} />
+                                    ) : (
+                                        <Text style={styles.saveBtnText}>Save Changes</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        </KeyboardAvoidingView>
+                    </View>
+                </Modal>
+
                 {/* Section: Security & Privacy */}
                 <View style={styles.sectionCard}>
                     <MenuOption
                         icon="shield-lock-outline"
                         title="Account Security"
                         subtitle="Manage password and 2FA"
-                        onPress={() => {
-                            if (Platform.OS === 'web') {
-                                window.alert('Security Notice\n\nTwo-Factor Authentication (2FA) is currently enabled. Password changes must be handled through the main web portal.');
-                            } else {
-                                Alert.alert(
-                                    'Security Notice',
-                                    'Two-Factor Authentication (2FA) is currently enabled. Password changes must be handled through the main web portal.'
-                                );
-                            }
-                        }}
+                        onPress={() => showAlert({
+                            type: 'info',
+                            title: 'Security Notice',
+                            message: 'Two-Factor Authentication (2FA) is currently enabled. Password changes must be handled through the main web portal.',
+                            buttons: [{ text: 'Got It' }],
+                        })}
                     />
                     <MenuOption
                         icon="database-export-outline"
                         title="Export My Data"
                         subtitle="Request an archive of your data"
                         showBorder={false}
-                        onPress={() => {
-                            if (Platform.OS === 'web') {
-                                window.alert('Export Started\n\nYour data archive is being compiled. A secure download link will be emailed to you within 24 hours.');
-                            } else {
-                                Alert.alert(
-                                    'Export Started',
-                                    'Your data archive is being compiled. A secure download link will be emailed to you within 24 hours.',
-                                    [{ text: 'Understood' }]
-                                );
-                            }
-                        }}
+                        onPress={() => showAlert({
+                            type: 'success',
+                            title: 'Export Started',
+                            message: 'Your data archive is being compiled. A secure download link will be emailed to you within 24 hours.',
+                            buttons: [{ text: 'Understood' }],
+                        })}
                     />
                 </View>
 
@@ -134,42 +233,47 @@ export default function ProfileScreen({ navigation }) {
                         icon="broom"
                         title="Clear App Cache"
                         subtitle="Free up storage space"
-                        onPress={() => {
-                            if (Platform.OS === 'web') {
-                                window.alert('Cache Cleared\n\nSuccessfully cleared 12.4 MB of temporary app data.');
-                            } else {
-                                Alert.alert(
-                                    'Cache Cleared',
-                                    'Successfully cleared 12.4 MB of temporary app data.',
-                                    [{ text: 'OK' }]
-                                );
-                            }
-                        }}
+                        onPress={() => showAlert({
+                            type: 'success',
+                            title: 'Cache Cleared',
+                            message: 'Successfully cleared 12.4 MB of temporary app data.',
+                            buttons: [{ text: 'OK' }],
+                        })}
                     />
                     <MenuOption
                         icon="bell-ring-outline"
                         title="Push Notifications"
                         subtitle="Enabled"
-                        onPress={() => {
-                            if (Platform.OS === 'web') {
-                                window.alert('Notifications\n\nPush notifications are active for potential matches and platform updates.');
-                            } else {
-                                Alert.alert(
-                                    'Notifications',
-                                    'Push notifications are active for potential matches and platform updates.'
-                                );
-                            }
-                        }}
+                        onPress={() => showAlert({
+                            type: 'info',
+                            title: 'Push Notifications',
+                            message: 'Push notifications are active for potential matches and platform updates.',
+                            buttons: [{ text: 'OK' }],
+                        })}
                     />
                     <MenuOption
-                        icon="email-outline"
-                        title="Contact Support"
-                        subtitle="Email our support team"
+                        icon="whatsapp"
+                        title="WhatsApp Support"
+                        subtitle="Chat with our support team"
                         onPress={() => {
+                            const message = "Hi Support, I need help with the Lost and Found app.";
+                            const phone = "+263772483207";
+                            const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(message)}`;
                             if (Platform.OS === 'web') {
-                                window.open('mailto:support@lostandfound.com');
+                                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`);
                             } else {
-                                Linking.openURL('mailto:support@lostandfound.com');
+                                Linking.canOpenURL(url).then(supported => {
+                                    if (supported) {
+                                        Linking.openURL(url);
+                                    } else {
+                                        showAlert({
+                                            type: 'warning',
+                                            title: 'WhatsApp Not Found',
+                                            message: 'Make sure WhatsApp is installed on your device.',
+                                            buttons: [{ text: 'OK' }],
+                                        });
+                                    }
+                                });
                             }
                         }}
                     />
@@ -178,16 +282,12 @@ export default function ProfileScreen({ navigation }) {
                         title="About App"
                         subtitle="Version 3.0.0"
                         showBorder={false}
-                        onPress={() => {
-                            if (Platform.OS === 'web') {
-                                window.alert('Lost and Found Platform v3.0.0\n\nA cross-platform solution powered by React Native and Django AI.');
-                            } else {
-                                Alert.alert(
-                                    'About App',
-                                    'Lost and Found Platform v3.0.0\n\nA cross-platform solution powered by React Native and Django AI.'
-                                );
-                            }
-                        }}
+                        onPress={() => showAlert({
+                            type: 'info',
+                            title: 'About App',
+                            message: 'Lost and Found Platform v3.0.0\n\nA cross-platform solution powered by React Native and Django AI.',
+                            buttons: [{ text: 'OK' }],
+                        })}
                     />
                 </View>
 
@@ -212,7 +312,7 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F3F4F6', // Light Gray background as per reference
+        backgroundColor: '#F3F4F6',
     },
     header: {
         flexDirection: 'row',
@@ -224,12 +324,18 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: COLORS.text,
     },
-    headerIcon: {
-        padding: 8,
-        backgroundColor: '#fff',
-        borderRadius: 20,
+    headerEditBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: COLORS.primary + '15',
+        borderRadius: 16,
+    },
+    headerEditText: {
+        color: COLORS.primary,
+        fontWeight: '600',
+        fontSize: 14,
     },
     scrollContent: {
         paddingHorizontal: 20,
@@ -280,9 +386,6 @@ const styles = StyleSheet.create({
     userEmail: {
         fontSize: 14,
         color: '#6B7280',
-    },
-    editButton: {
-        padding: 8,
     },
     // Section Cards
     sectionCard: {
@@ -337,9 +440,91 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     versionText: {
-        textAlign: 'center',
-        color: '#9CA3AF',
         fontSize: 12,
-        marginTop: 8,
+        color: COLORS.textLight,
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: COLORS.background,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: '90%',
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 24,
+        borderBottomWidth: 1,
+        borderBottomColor: COLORS.border,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    modalCloseBtn: {
+        padding: 4,
+    },
+    modalBody: {
+        padding: 24,
+    },
+    inputContainer: {
+        marginBottom: 20,
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: COLORS.text,
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 16,
+        backgroundColor: COLORS.surface,
+        color: COLORS.text,
+    },
+    disabledInput: {
+        backgroundColor: '#EAEAEA',
+        justifyContent: 'center',
+    },
+    disabledText: {
+        fontSize: 16,
+        color: COLORS.textSecondary,
+    },
+    helperText: {
+        fontSize: 12,
+        color: COLORS.textLight,
+        marginTop: 6,
+        fontStyle: 'italic',
+    },
+    modalFooter: {
+        padding: 24,
+        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.border,
+    },
+    saveBtn: {
+        backgroundColor: COLORS.primary,
+        borderRadius: 12,
+        paddingVertical: 16,
+        alignItems: 'center',
+    },
+    saveBtnText: {
+        color: COLORS.surface,
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });

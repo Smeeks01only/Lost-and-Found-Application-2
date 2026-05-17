@@ -12,16 +12,19 @@ import {
     ActivityIndicator,
     Image,
     TouchableOpacity,
+    Linking,
+    Platform,
+    Alert,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { matchesAPI } from '../../api';
 import { STATUS_LABELS, COLORS } from '../../constants';
-// import { useTheme } from '../../context/ThemeContext'; // Removed
+import { useAuth } from '../../context/AuthContext';
 
 export default function MatchDetailScreen({ route, navigation }) {
     const { id } = route.params;
-    // const { theme } = useTheme(); // Removed
+    const { user } = useAuth();
     const [match, setMatch] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -123,14 +126,40 @@ export default function MatchDetailScreen({ route, navigation }) {
                     </View>
                 </View>
 
-                {/* Actions */}
-                <TouchableOpacity
-                    style={styles.claimButton}
-                    onPress={() => navigation.navigate('SubmitClaim', { matchId: match.id })}
-                >
-                    <Text style={styles.claimButtonText}>Initialize Claim</Text>
-                </TouchableOpacity>
+                {/* Actions - Only visible to Loser */}
+                {user?.role === 'LOSER' && (
+                    <>
+                        <TouchableOpacity
+                            style={styles.claimButton}
+                            onPress={() => navigation.navigate('SubmitClaim', { matchId: match.id })}
+                        >
+                            <Text style={styles.claimButtonText}>Initialize Claim</Text>
+                        </TouchableOpacity>
 
+                        {/* WhatsApp Contact Button */}
+                        <TouchableOpacity
+                            style={[styles.claimButton, { backgroundColor: '#25D366', marginTop: 12, flexDirection: 'row', justifyContent: 'center' }]}
+                            onPress={() => {
+                                const message = `Hello! We noticed a potential match for your lost item: ${lost_item?.title}. Please contact us regarding your claim.`;
+                                const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
+                                if (Platform.OS === 'web') {
+                                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`);
+                                } else {
+                                    Linking.canOpenURL(url).then(supported => {
+                                        if (supported) {
+                                            Linking.openURL(url);
+                                        } else {
+                                            Alert.alert('Error', 'Make sure WhatsApp is installed on your device.');
+                                        }
+                                    });
+                                }
+                            }}
+                        >
+                            <MaterialCommunityIcons name="whatsapp" size={22} color="#fff" style={{ marginRight: 8 }} />
+                            <Text style={styles.claimButtonText}>Message User on WhatsApp</Text>
+                        </TouchableOpacity>
+                    </>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
