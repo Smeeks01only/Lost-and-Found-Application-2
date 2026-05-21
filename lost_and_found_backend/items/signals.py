@@ -8,6 +8,7 @@ its embedding and add it to the FAISS vector store.
 import logging
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.db import transaction
 
 from items.models import FoundItem, LostItem
 
@@ -24,7 +25,6 @@ def generate_found_item_embedding(sender, instance, created, **kwargs):
     """
     try:
         from nlp_service.embeddings import embedding_generator
-        from nlp_service.chroma_vector_store import get_found_items_chroma_store
         
         # Only process available items
         if instance.status != 'AVAILABLE':
@@ -44,11 +44,28 @@ def generate_found_item_embedding(sender, instance, created, **kwargs):
         
         action = "Created" if created else "Updated"
         logger.info(f"{action} embedding for found item {instance.id}")
-        
-        # Proactively run matching in the background
-        import threading
-        from nlp_service.matching import execute_matching_algorithm
-        threading.Thread(target=execute_matching_algorithm, kwargs={'lost_item': None}).start()
+
+        # Proactively run matching in the background.
+        # IMPORTANT: schedule on_commit to avoid race conditions when this signal fires inside
+        # an atomic transaction (common in management commands/tests).
+        from django.conf import settings
+
+        def _trigger_matching():
+            if getattr(settings, 'USE_CELERY_MATCHING', False):
+                try:
+                    from matching.tasks import proactive_matching_task
+
+                    proactive_matching_task.delay()
+                    return
+                except Exception as exc:
+                    logger.warning(f"Celery proactive matching not available, falling back to thread: {exc}")
+
+            import threading
+            from nlp_service.matching import execute_matching_algorithm
+
+            threading.Thread(target=execute_matching_algorithm, kwargs={'lost_item': None}).start()
+
+        transaction.on_commit(_trigger_matching)
         
     except Exception as e:
         logger.error(f"Error generating embedding for found item {instance.id}: {e}")
@@ -63,10 +80,26 @@ def run_matching_for_lost_item(sender, instance, created, **kwargs):
         return
         
     try:
-        import threading
-        from nlp_service.matching import execute_matching_algorithm
-        threading.Thread(target=execute_matching_algorithm, kwargs={'lost_item': instance}).start()
-        logger.info(f"Triggered background matching for lost item {instance.id}")
+        from django.conf import settings
+
+        def _trigger_matching_for_item():
+            if getattr(settings, 'USE_CELERY_MATCHING', False):
+                try:
+                    from matching.tasks import trigger_matching_for_lost_item
+
+                    trigger_matching_for_lost_item.delay(str(instance.id))
+                    logger.info(f"Queued Celery matching for lost item {instance.id}")
+                    return
+                except Exception as exc:
+                    logger.warning(f"Celery matching not available, falling back to thread: {exc}")
+
+            import threading
+            from nlp_service.matching import execute_matching_algorithm
+
+            threading.Thread(target=execute_matching_algorithm, kwargs={'lost_item': instance}).start()
+            logger.info(f"Triggered threaded matching for lost item {instance.id}")
+
+        transaction.on_commit(_trigger_matching_for_item)
     except Exception as e:
         logger.error(f"Error triggering matching for lost item {instance.id}: {e}")
 

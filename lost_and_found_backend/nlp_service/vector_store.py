@@ -51,15 +51,52 @@ class VectorStore:
     
     def _create_index(self):
         """Create a new FAISS index."""
-        if self.index_type == 'flat':
-            # Exact L2 search (accurate but slower for large datasets)
+        if self.index_type in {'flat', 'l2'}:
+            # Exact squared L2 search (IndexFlatL2 returns squared L2 distances)
             self.index = faiss.IndexFlatL2(self.dimension)
+        elif self.index_type in {'ip', 'flat_ip'}:
+            # Inner product search. With normalized embeddings, this equals cosine similarity.
+            self.index = faiss.IndexFlatIP(self.dimension)
         elif self.index_type == 'ivf':
             # Approximate search using IVF (faster for large datasets)
             quantizer = faiss.IndexFlatL2(self.dimension)
             self.index = faiss.IndexIVFFlat(quantizer, self.dimension, 100)
         else:
             self.index = faiss.IndexFlatL2(self.dimension)
+
+    def _vector_to_2d_float32(self, vector: np.ndarray) -> np.ndarray:
+        vec = np.asarray(vector, dtype=np.float32)
+        if vec.ndim != 1:
+            vec = vec.reshape(-1)
+        if vec.shape[0] != self.dimension:
+            raise ValueError(
+                f"Vector dimension mismatch: expected {self.dimension}, got {vec.shape[0]}"
+            )
+        return np.array([vec], dtype=np.float32)
+
+    def _distance_to_similarity(self, dist: float) -> float:
+        """Convert FAISS distance/score to cosine similarity when possible."""
+        if not FAISS_AVAILABLE or self.index is None:
+            return 0.0
+
+        # For normalized embeddings:
+        # - IndexFlatIP returns inner product == cosine similarity
+        # - IndexFlatL2 returns squared L2 distance, where dist = 2 - 2*cos
+        try:
+            if isinstance(self.index, faiss.IndexFlatIP):
+                sim = float(dist)
+            else:
+                # Assume squared L2.
+                sim = 1.0 - (float(dist) / 2.0)
+        except Exception:
+            sim = 0.0
+
+        # Clamp to [-1, 1] for safety
+        if sim < -1.0:
+            sim = -1.0
+        if sim > 1.0:
+            sim = 1.0
+        return sim
     
     @property
     def is_empty(self) -> bool:
@@ -95,7 +132,7 @@ class VectorStore:
             self.remove_vector(item_id)
         
         # Ensure vector is the right shape and type
-        vector = np.array([vector]).astype('float32')
+        vector = self._vector_to_2d_float32(vector)
         
         # Get the next FAISS ID
         faiss_id = self.index.ntotal
@@ -155,40 +192,46 @@ class VectorStore:
         
         exclude_ids = set(exclude_ids or [])
         
-        # Ensure vector is the right shape
-        query_vector = np.array([query_vector]).astype('float32')
-        
-        # Search for more than top_k to account for exclusions
-        search_k = min(top_k + len(exclude_ids) + 10, self.total_vectors)
-        
-        distances, indices = self.index.search(query_vector, search_k)
-        
-        results = []
-        for dist, idx in zip(distances[0], indices[0]):
-            if idx == -1:  # FAISS returns -1 for empty slots
-                continue
-            
-            if idx not in self.id_to_item:
-                continue
-            
-            item_id = self.id_to_item[idx]
-            
-            if item_id in exclude_ids:
-                continue
-            
-            # Convert L2 distance to similarity score
-            # Using inverse: similarity = 1 / (1 + distance)
-            similarity = 1.0 / (1.0 + float(dist))
-            
-            results.append({
-                'item_id': item_id,
-                'distance': float(dist),
-                'similarity': similarity
-            })
-            
-            if len(results) >= top_k:
+        query_vector = self._vector_to_2d_float32(query_vector)
+
+        # FAISS indexes can accumulate "holes" because we can't truly delete from IndexFlat.
+        # To avoid returning too few results, progressively widen the search.
+        total = self.total_vectors
+        base_k = max(top_k * 10, top_k + len(exclude_ids) + 50)
+        search_k = min(base_k, total)
+
+        results: List[Dict] = []
+        attempts = 0
+        while attempts < 3 and search_k > 0:
+            distances, indices = self.index.search(query_vector, search_k)
+
+            results = []
+            for dist, idx in zip(distances[0], indices[0]):
+                if idx == -1:
+                    continue
+                if idx not in self.id_to_item:
+                    continue
+
+                item_id = self.id_to_item[idx]
+                if item_id in exclude_ids:
+                    continue
+
+                similarity = self._distance_to_similarity(float(dist))
+                results.append({
+                    'item_id': item_id,
+                    'distance': float(dist),
+                    'similarity': similarity,
+                })
+                if len(results) >= top_k:
+                    break
+
+            if len(results) >= top_k or search_k >= total:
                 break
-        
+
+            # widen search
+            search_k = min(search_k * 2, total)
+            attempts += 1
+
         return results
     
     def save(self, filepath: str):
@@ -241,6 +284,22 @@ class VectorStore:
         try:
             # Load FAISS index
             self.index = faiss.read_index(faiss_path)
+
+            # Validate dimension
+            try:
+                index_dim = int(getattr(self.index, 'd', self.dimension))
+                if index_dim != self.dimension:
+                    logger.error(
+                        f"Vector store dimension mismatch. On disk: {index_dim}, expected: {self.dimension}. "
+                        "Resetting index and mappings."
+                    )
+                    self._create_index()
+                    self.id_to_item = {}
+                    self.item_to_id = {}
+                    return False
+            except Exception:
+                # If we can't validate dimension, continue best-effort.
+                pass
             
             # Load mappings
             with open(mappings_path, 'rb') as f:
@@ -269,9 +328,30 @@ def get_found_items_store() -> VectorStore:
     
     if _found_items_store is None:
         from django.conf import settings
+
+        # Prefer the model's actual embedding dimension to avoid mismatches
+        # when switching between a local fine-tuned model (e.g., 768-d) and a hub model (e.g., 384-d).
+        dimension = getattr(settings, 'NLP_EMBEDDING_DIMENSION', None)
+        try:
+            from .embeddings import embedding_generator
+
+            model_dim = int(embedding_generator.dimension)
+            if dimension is None or int(dimension) != model_dim:
+                if dimension is not None:
+                    logger.warning(
+                        f"NLP_EMBEDDING_DIMENSION ({dimension}) differs from model dimension ({model_dim}). "
+                        "Using model dimension."
+                    )
+                dimension = model_dim
+        except Exception as exc:
+            # Fall back to the configured dimension.
+            if dimension is None:
+                dimension = 384
+            logger.warning(f"Could not determine embedding dimension from model: {exc}")
+
+        index_type = getattr(settings, 'NLP_FAISS_INDEX_TYPE', 'ip')
         
-        dimension = getattr(settings, 'NLP_EMBEDDING_DIMENSION', 384)
-        _found_items_store = VectorStore(dimension=dimension)
+        _found_items_store = VectorStore(dimension=int(dimension), index_type=str(index_type))
         
         # Try to load existing store
         store_path = getattr(settings, 'VECTOR_STORE_PATH', 'vector_stores')

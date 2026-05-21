@@ -192,9 +192,13 @@ class LostItem(models.Model):
             desc = f"Color: {color_val}. {desc}"
         
         parts = []
-        if title: parts.append(f'item: {title}')
-        if brand_val: parts.append(f'brand: {brand_val}')
-        if desc:  parts.append(f'description: {desc[:300]}')
+        if desc:
+            # Put the description first so it carries the strongest semantic signal.
+            parts.append(f'description: {desc[:500]}')
+        if title:
+            parts.append(f'title: {title}')
+        if brand_val:
+            parts.append(f'brand: {brand_val}')
         return ' '.join(parts) or 'unknown item'
 
 

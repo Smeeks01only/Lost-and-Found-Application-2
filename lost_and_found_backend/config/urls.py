@@ -15,6 +15,9 @@ urlpatterns = [
     path('api/v1/', include('items.urls')),
     path('api/v1/', include('matching.urls')),
     path('api/v1/', include('notifications.urls')),
+    path('api/v1/', include('nlp_service.urls')),
+    path('api/v1/whatsapp/', include('whatsapp_bot.urls')),
+    path('api/v1/telegram/', include('telegram_bot.urls')),
 ]
 
 # Serve media files in development

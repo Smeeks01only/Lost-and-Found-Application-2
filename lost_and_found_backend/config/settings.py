@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'matching',
     'notifications',
     'nlp_service',
+    'whatsapp_bot',
+    'telegram_bot',
 ]
 
 MIDDLEWARE = [
@@ -126,6 +128,13 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'accounts.User'
 
 
+# Matching Configuration
+# Hybrid scoring weights: alpha * semantic + (1-alpha) * metadata
+# Range: 0.3 (prioritize metadata) to 0.9 (prioritize semantic)
+MATCHING_ALPHA = config('MATCHING_ALPHA', default=0.6, cast=float)
+MATCHING_THRESHOLD = config('MATCHING_THRESHOLD', default=0.5, cast=float)
+USE_CELERY_MATCHING = config('USE_CELERY_MATCHING', default=False, cast=bool)
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -202,6 +211,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# If True, signals will enqueue matching jobs to Celery instead of running a local thread.
+# In local dev, keep this False unless you are running a Celery worker.
+USE_CELERY_MATCHING = config('USE_CELERY_MATCHING', default=False, cast=bool)
+
 # Celery Beat Schedule (for periodic tasks)
 from celery.schedules import crontab
 
@@ -229,11 +242,23 @@ VECTOR_STORE_PATH = BASE_DIR / 'vector_stores'
 CHROMA_PERSIST_PATH = BASE_DIR / 'synthetic_data' / 'chroma'
 CHROMA_COLLECTION_FOUND = 'synthetic_found_items'
 
+# Twilio WhatsApp (demo)
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_WHATSAPP_NUMBER = config('TWILIO_WHATSAPP_NUMBER', default='')
+TWILIO_VALIDATE_SIGNATURES = config('TWILIO_VALIDATE_SIGNATURES', default=False, cast=bool)
+
+# Telegram Bot (demo)
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+# Optional: validate Telegram webhook requests using secret token header.
+TELEGRAM_WEBHOOK_SECRET_TOKEN = config('TELEGRAM_WEBHOOK_SECRET_TOKEN', default='')
+TELEGRAM_VALIDATE_SECRET = config('TELEGRAM_VALIDATE_SECRET', default=False, cast=bool)
+
 # Matching Algorithm Weights
-MATCHING_SEMANTIC_WEIGHT = 0.6
-MATCHING_TIME_WEIGHT = 0.2
-MATCHING_LOCATION_WEIGHT = 0.2
-MATCHING_THRESHOLD = 0.66  # Minimum score to consider a match
+MATCHING_SEMANTIC_WEIGHT = config('MATCHING_SEMANTIC_WEIGHT', default=0.6, cast=float)
+MATCHING_TIME_WEIGHT = config('MATCHING_TIME_WEIGHT', default=0.2, cast=float)
+MATCHING_LOCATION_WEIGHT = config('MATCHING_LOCATION_WEIGHT', default=0.2, cast=float)
+MATCHING_THRESHOLD = config('MATCHING_THRESHOLD', default=0.66, cast=float)  # Minimum score to consider a match
 
 # Lost Item Search Configuration
 LOST_ITEM_SEARCH_PERIOD_DAYS = 30  # Days to keep searching for matches

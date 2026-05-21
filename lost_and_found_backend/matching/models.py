@@ -65,9 +65,13 @@ class Match(models.Model):
         default=0.0,
         help_text='Location matching score'
     )
+    metadata_score = models.FloatField(
+        default=0.0,
+        help_text='Composite metadata similarity (category, location, time, color)'
+    )
     final_score = models.FloatField(
         default=0.0,
-        help_text='Weighted final score'
+        help_text='Hybrid final score: alpha * semantic + (1-alpha) * metadata'
     )
     
     # Ranking
@@ -100,6 +104,7 @@ class Match(models.Model):
         """Get a breakdown of all matching scores."""
         return {
             'semantic_score': self.semantic_score,
+            'metadata_score': self.metadata_score,
             'time_score': self.time_score,
             'location_score': self.location_score,
             'final_score': self.final_score,

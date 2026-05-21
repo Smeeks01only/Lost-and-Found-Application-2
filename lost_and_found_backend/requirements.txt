@@ -40,6 +40,7 @@ psycopg2-binary==2.9.11
 PyJWT==2.12.1
 python-dateutil==2.9.0.post0
 python-decouple==3.8
+twilio==9.0.5
 PyYAML==6.0.3
 redis==7.1.0
 regex==2026.1.15
