@@ -137,7 +137,7 @@ export default function MatchDetailScreen({ route, navigation }) {
                         </TouchableOpacity>
 
                         {/* WhatsApp Contact Button */}
-                        <TouchableOpacity
+                        {/* <TouchableOpacity
                             style={[styles.claimButton, { backgroundColor: '#25D366', marginTop: 12, flexDirection: 'row', justifyContent: 'center' }]}
                             onPress={() => {
                                 const message = `Hello! We noticed a potential match for your lost item: ${lost_item?.title}. Please contact us regarding your claim.`;
@@ -157,7 +157,7 @@ export default function MatchDetailScreen({ route, navigation }) {
                         >
                             <MaterialCommunityIcons name="whatsapp" size={22} color="#fff" style={{ marginRight: 8 }} />
                             <Text style={styles.claimButtonText}>Message User on WhatsApp</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                     </>
                 )}
             </ScrollView>

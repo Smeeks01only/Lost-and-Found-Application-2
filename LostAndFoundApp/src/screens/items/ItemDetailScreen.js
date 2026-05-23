@@ -99,7 +99,7 @@ export default function ItemDetailScreen({ route, navigation }) {
                 </View>
 
                 {/* WhatsApp Share Button */}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={styles.whatsappButton}
                     onPress={() => {
                         const shareText = `Check out this ${type.toLowerCase()} item on the Lost & Found App: ${item.title}\n\nLocation: ${type === 'FOUND' ? item.location_found : item.location_lost}\nDate: ${new Date(type === 'FOUND' ? item.date_found : item.date_lost).toLocaleDateString()}`;
@@ -120,7 +120,7 @@ export default function ItemDetailScreen({ route, navigation }) {
                 >
                     <MaterialCommunityIcons name="whatsapp" size={24} color="#fff" style={{ marginRight: 8 }} />
                     <Text style={styles.whatsappButtonText}>Share via WhatsApp</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </ScrollView>
         </SafeAreaView>
     );
