@@ -398,7 +398,7 @@ def execute_matching_algorithm(lost_item=None):
         
     for item in items_to_process:
         try:
-            matches = find_matches_for_lost_item(item, top_k=5, threshold=0.4)
+            matches = find_matches_for_lost_item(item, top_k=5)
             if matches:
                 for match_data in matches:
                     found_item = match_data['found_item']

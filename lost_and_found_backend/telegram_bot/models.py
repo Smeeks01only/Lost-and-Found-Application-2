@@ -6,7 +6,9 @@ class TelegramSession(models.Model):
 
     class StateChoices(models.TextChoices):
         START = "START", "Start"
+        ASK_PHONE = "ASK_PHONE", "Ask Phone"
         ASK_EMAIL = "ASK_EMAIL", "Ask Email"
+        ASK_PASSWORD = "ASK_PASSWORD", "Ask Password"
         ASK_TITLE = "ASK_TITLE", "Ask Title"
         ASK_DESCRIPTION = "ASK_DESCRIPTION", "Ask Description"
         ASK_CATEGORY = "ASK_CATEGORY", "Ask Category"

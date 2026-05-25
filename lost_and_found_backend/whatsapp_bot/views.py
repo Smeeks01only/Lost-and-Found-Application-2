@@ -32,18 +32,45 @@ def _get_or_create_session(phone_number: str) -> WhatsAppSession:
     return session
 
 
+def _normalize_phone(value: str) -> str:
+    raw = (value or "").strip()
+    raw = raw.replace("whatsapp:", "")
+    raw = re.sub(r"\s+", "", raw)
+    if not raw:
+        return ""
+    if raw.startswith("+"):
+        digits = re.sub(r"\D", "", raw)
+        return "+" + digits if digits else ""
+    return re.sub(r"\D", "", raw)
+
+
+def _phone_candidates(value: str) -> list[str]:
+    normalized = _normalize_phone(value)
+    if not normalized:
+        return []
+    digits = re.sub(r"\D", "", normalized)
+    candidates = {normalized, digits}
+    if digits:
+        candidates.add("+" + digits)
+    return [c for c in candidates if c]
+
+
 def _get_user_by_phone(phone_number: str):
-    return User.objects.filter(phone_number=phone_number).first()
+    candidates = _phone_candidates(phone_number)
+    if not candidates:
+        return None
+    return User.objects.filter(phone_number__in=candidates).first()
 
 
-def _get_or_create_user_by_email(email: str, phone_number: str) -> User:
-    user = User.objects.filter(email=email).first()
-    if user:
-        if phone_number and not user.phone_number:
-            user.phone_number = phone_number
-            user.save(update_fields=["phone_number"])
-        return user
-    return User.objects.create_user(email=email, password=None, full_name="WhatsApp User")
+def _authenticate_user(email: str, password: str) -> User | None:
+    if not email or not password:
+        return None
+    user = User.objects.filter(email__iexact=email.strip()).first()
+    if not user or not user.is_active or not user.has_usable_password():
+        return None
+    if not user.check_password(password):
+        return None
+    return user
 
 
 def _category_help_text() -> str:
@@ -114,7 +141,7 @@ def _parse_date(value: str):
 
 def _start_message() -> str:
     return (
-    "Welcome to Lost & Found demo bot. "
+    "Welcome to Lost & Found bot. "
     "Reply 'report' to log a lost item, or 'cancel' to stop."
     )
 
@@ -138,10 +165,12 @@ def webhook(request):
 
     from_raw = request.POST.get("From", "")
     body = _normalize_incoming(request.POST.get("Body", ""))
-    phone_number = from_raw.replace("whatsapp:", "") if from_raw else ""
-    logger.info("Twilio webhook received: From=%s Body=%r", from_raw, body)
+    incoming_phone = _normalize_phone(from_raw)
+    session_key = incoming_phone or (from_raw.replace("whatsapp:", "") if from_raw else "unknown")
 
-    session = _get_or_create_session(phone_number)
+    session = _get_or_create_session(session_key)
+    safe_body = "***" if session.state == WhatsAppSession.StateChoices.ASK_PASSWORD else body
+    logger.info("Twilio webhook received: From=%s Body=%r", from_raw, safe_body)
 
     if not body:
         return _twiml("Please send a message to begin.")
@@ -160,7 +189,7 @@ def webhook(request):
 
     if lower in {"report", "lost", "report lost"} and session.state != WhatsAppSession.StateChoices.START:
         session.reset()
-        existing_user = _get_user_by_phone(phone_number)
+        existing_user = _get_user_by_phone(incoming_phone)
         if existing_user:
             session.data = {"user_id": str(existing_user.id)}
             session.state = WhatsAppSession.StateChoices.ASK_TITLE
@@ -168,12 +197,12 @@ def webhook(request):
             return _twiml("What is the item title?")
         session.state = WhatsAppSession.StateChoices.ASK_EMAIL
         session.save(update_fields=["state", "updated_at"])
-        return _twiml("Please provide your email to link this report.")
+        return _twiml("We couldn't verify your phone number. Please enter your email to sign in.")
 
     if session.state == WhatsAppSession.StateChoices.START:
         if lower not in {"report", "lost", "report lost"}:
             return _twiml(_start_message())
-        existing_user = _get_user_by_phone(phone_number)
+        existing_user = _get_user_by_phone(incoming_phone)
         if existing_user:
             session.data = {"user_id": str(existing_user.id)}
             session.state = WhatsAppSession.StateChoices.ASK_TITLE
@@ -181,16 +210,31 @@ def webhook(request):
             return _twiml("What is the item title?")
         session.state = WhatsAppSession.StateChoices.ASK_EMAIL
         session.save(update_fields=["state", "updated_at"])
-        return _twiml("Please provide your email to link this report.")
+        return _twiml("We couldn't verify your phone number. Please enter your email to sign in.")
 
     if session.state == WhatsAppSession.StateChoices.ASK_EMAIL:
         if not EMAIL_RE.match(body):
             return _twiml("That email looks invalid. Please enter a valid email.")
-        user = _get_or_create_user_by_email(body, phone_number)
+        session.data = {"pending_email": body.strip()}
+        session.state = WhatsAppSession.StateChoices.ASK_PASSWORD
+        session.save(update_fields=["state", "data", "updated_at"])
+        return _twiml("Please enter your password.")
+
+    if session.state == WhatsAppSession.StateChoices.ASK_PASSWORD:
+        pending_email = (session.data or {}).get("pending_email")
+        user = _authenticate_user(pending_email or "", body)
+        if not user:
+            session.data = {}
+            session.state = WhatsAppSession.StateChoices.ASK_EMAIL
+            session.save(update_fields=["state", "data", "updated_at"])
+            return _twiml("Invalid credentials. Please enter your email again, or reply 'restart'.")
+        if incoming_phone and not user.phone_number:
+            user.phone_number = incoming_phone
+            user.save(update_fields=["phone_number"])
         session.data = {"user_id": str(user.id)}
         session.state = WhatsAppSession.StateChoices.ASK_TITLE
         session.save(update_fields=["state", "data", "updated_at"])
-        return _twiml("Thanks. What is the item title?")
+        return _twiml("Signed in. What is the item title?")
 
     if session.state == WhatsAppSession.StateChoices.ASK_TITLE:
         session.data["title"] = body

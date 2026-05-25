@@ -50,6 +50,9 @@ class EmbeddingGenerator:
     @property
     def dimension(self):
         """Get the embedding dimension."""
+        get_dim = getattr(self.model, 'get_embedding_dimension', None)
+        if callable(get_dim):
+            return get_dim()
         return self.model.get_sentence_embedding_dimension()
     
     def generate_embedding(self, text: str) -> np.ndarray:

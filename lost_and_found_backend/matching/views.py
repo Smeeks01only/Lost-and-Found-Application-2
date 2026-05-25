@@ -222,7 +222,7 @@ class RunMatchingView(viewsets.ViewSet):
 
         for item in lost_items:
             # Run algorithm
-            matches = find_matches_for_lost_item(item, top_k=5, threshold=0.4)
+            matches = find_matches_for_lost_item(item, top_k=5)
             
             if matches:
                 results['matches_found'] += len(matches)

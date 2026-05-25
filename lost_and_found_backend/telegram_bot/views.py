@@ -18,13 +18,53 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 logger = logging.getLogger(__name__)
 
 
+def _normalize_phone(value: str) -> str:
+    raw = (value or "").strip()
+    raw = re.sub(r"\s+", "", raw)
+    if not raw:
+        return ""
+    if raw.startswith("+"):
+        digits = re.sub(r"\D", "", raw)
+        return "+" + digits if digits else ""
+    return re.sub(r"\D", "", raw)
+
+
+def _phone_candidates(value: str) -> list[str]:
+    normalized = _normalize_phone(value)
+    if not normalized:
+        return []
+    digits = re.sub(r"\D", "", normalized)
+    candidates = {normalized, digits}
+    if digits:
+        candidates.add("+" + digits)
+    return [c for c in candidates if c]
+
+
+def _get_user_by_phone(phone_number: str) -> User | None:
+    candidates = _phone_candidates(phone_number)
+    if not candidates:
+        return None
+    return User.objects.filter(phone_number__in=candidates).first()
+
+
+def _authenticate_user(email: str, password: str) -> User | None:
+    if not email or not password:
+        return None
+    user = User.objects.filter(email__iexact=email.strip()).first()
+    if not user or not user.is_active or not user.has_usable_password():
+        return None
+    if not user.check_password(password):
+        return None
+    return user
+
+
 def _normalize_text(text: str) -> str:
     return (text or "").strip()
 
 
 def _start_message() -> str:
     return (
-        "Welcome to Lost & Found demo bot.\n"
+        "Welcome to Lost & Found bot.\n"
         "Commands:\n"
         "/report - log a lost item\n"
         "/restart - start over\n"
@@ -104,13 +144,6 @@ def _get_or_create_session(chat_id: int) -> TelegramSession:
     return session
 
 
-def _get_or_create_user_by_email(email: str, chat_id: int) -> User:
-    user = User.objects.filter(email=email).first()
-    if user:
-        return user
-    return User.objects.create_user(email=email, password=None, full_name="Telegram User")
-
-
 def _summary_text(data: dict) -> str:
     return (
         "Confirm details:\n"
@@ -177,9 +210,10 @@ def webhook(request):
         return JsonResponse({"ok": True, "ignored": True})
 
     text = _normalize_text(message.get("text") or "")
-    logger.info("Telegram webhook received: chat_id=%s text=%r", chat_id, text)
 
     session = _get_or_create_session(int(chat_id))
+    safe_text = "***" if session.state == TelegramSession.StateChoices.ASK_PASSWORD else text
+    logger.info("Telegram webhook received: chat_id=%s text=%r", chat_id, safe_text)
 
     # Global commands
     lower = text.lower()
@@ -209,10 +243,36 @@ def webhook(request):
             _send_message(int(chat_id), reply)
             return JsonResponse({"ok": True, "reply": reply})
 
-        # Start report flow
+        # Start report flow: verify identity first
+        session.state = TelegramSession.StateChoices.ASK_PHONE
+        session.save(update_fields=["state", "updated_at"])
+        reply = (
+            "To verify your account, reply with your phone number (e.g. +263771234567).\n"
+            "If you don't have a phone number, type 'email' to sign in with email + password."
+        )
+        _send_message(int(chat_id), reply)
+        return JsonResponse({"ok": True, "reply": reply})
+
+    if session.state == TelegramSession.StateChoices.ASK_PHONE:
+        if lower in {"email", "e-mail"}:
+            session.state = TelegramSession.StateChoices.ASK_EMAIL
+            session.save(update_fields=["state", "updated_at"])
+            reply = "Please enter your email to sign in."
+            _send_message(int(chat_id), reply)
+            return JsonResponse({"ok": True, "reply": reply})
+
+        user = _get_user_by_phone(text)
+        if user:
+            session.data = {"user_id": str(user.id)}
+            session.state = TelegramSession.StateChoices.ASK_TITLE
+            session.save(update_fields=["state", "data", "updated_at"])
+            reply = "Verified. What is the item title?"
+            _send_message(int(chat_id), reply)
+            return JsonResponse({"ok": True, "reply": reply})
+
         session.state = TelegramSession.StateChoices.ASK_EMAIL
         session.save(update_fields=["state", "updated_at"])
-        reply = "Please provide your email to link this report."
+        reply = "Phone not found. Please enter your email to sign in."
         _send_message(int(chat_id), reply)
         return JsonResponse({"ok": True, "reply": reply})
 
@@ -221,11 +281,28 @@ def webhook(request):
             reply = "That email looks invalid. Please enter a valid email."
             _send_message(int(chat_id), reply)
             return JsonResponse({"ok": True, "reply": reply})
-        user = _get_or_create_user_by_email(text, int(chat_id))
+        session.data = {"pending_email": text.strip()}
+        session.state = TelegramSession.StateChoices.ASK_PASSWORD
+        session.save(update_fields=["state", "data", "updated_at"])
+        reply = "Please enter your password."
+        _send_message(int(chat_id), reply)
+        return JsonResponse({"ok": True, "reply": reply})
+
+    if session.state == TelegramSession.StateChoices.ASK_PASSWORD:
+        pending_email = (session.data or {}).get("pending_email")
+        user = _authenticate_user(pending_email or "", text)
+        if not user:
+            session.data = {}
+            session.state = TelegramSession.StateChoices.ASK_EMAIL
+            session.save(update_fields=["state", "data", "updated_at"])
+            reply = "Invalid credentials. Please enter your email again, or send /restart."
+            _send_message(int(chat_id), reply)
+            return JsonResponse({"ok": True, "reply": reply})
+
         session.data = {"user_id": str(user.id)}
         session.state = TelegramSession.StateChoices.ASK_TITLE
         session.save(update_fields=["state", "data", "updated_at"])
-        reply = "Thanks. What is the item title?"
+        reply = "Signed in. What is the item title?"
         _send_message(int(chat_id), reply)
         return JsonResponse({"ok": True, "reply": reply})
 

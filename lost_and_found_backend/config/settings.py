@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'items',
     'matching',
     'notifications',
-    'nlp_service',
+    'nlp_service.apps.NlpServiceConfig',
     'whatsapp_bot',
     'telegram_bot',
 ]
@@ -134,6 +134,12 @@ AUTH_USER_MODEL = 'accounts.User'
 MATCHING_ALPHA = config('MATCHING_ALPHA', default=0.6, cast=float)
 MATCHING_THRESHOLD = config('MATCHING_THRESHOLD', default=0.5, cast=float)
 USE_CELERY_MATCHING = config('USE_CELERY_MATCHING', default=False, cast=bool)
+
+# Startup behavior (dev)
+# If True, the backend will preload the SBERT model and vector store on `runserver`.
+NLP_STARTUP_WARMUP = config('NLP_STARTUP_WARMUP', default=DEBUG, cast=bool)
+# If True, the backend will run a proactive matching sweep on `runserver`.
+NLP_STARTUP_PROACTIVE_MATCHING = config('NLP_STARTUP_PROACTIVE_MATCHING', default=DEBUG, cast=bool)
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -258,7 +264,7 @@ TELEGRAM_VALIDATE_SECRET = config('TELEGRAM_VALIDATE_SECRET', default=False, cas
 MATCHING_SEMANTIC_WEIGHT = config('MATCHING_SEMANTIC_WEIGHT', default=0.6, cast=float)
 MATCHING_TIME_WEIGHT = config('MATCHING_TIME_WEIGHT', default=0.2, cast=float)
 MATCHING_LOCATION_WEIGHT = config('MATCHING_LOCATION_WEIGHT', default=0.2, cast=float)
-MATCHING_THRESHOLD = config('MATCHING_THRESHOLD', default=0.66, cast=float)  # Minimum score to consider a match
+
 
 # Lost Item Search Configuration
 LOST_ITEM_SEARCH_PERIOD_DAYS = 30  # Days to keep searching for matches
