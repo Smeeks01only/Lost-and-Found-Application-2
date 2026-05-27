@@ -129,7 +129,10 @@ class MatchViewSet(viewsets.ReadOnlyModelViewSet):
         }
         
         if is_correct:
-            response_data['message'] = 'Secret answer correct! Please proceed to the Lost & Found office to collect your item.'
+            response_data['message'] = (
+                'Secret answer correct. Claim submitted and pending staff approval. '
+                'Please wait for confirmation before collecting your item.'
+            )
         else:
             response_data['message'] = 'Incorrect answer. Please try again.'
             response_data['attempts_remaining'] = 3 - claim.attempt_count
