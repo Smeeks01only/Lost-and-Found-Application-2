@@ -5,7 +5,6 @@ This module implements the hybrid matching algorithm that combines:
 - Semantic similarity (SBERT embeddings)
 - Metadata similarity (category, color, brand, location)
 
-Final score: S_final = α * S_semantic + (1 - α) * S_metadata
 Where S_metadata = weighted combination of category, location, time, and color matches
 α is tunable (0.3 to 0.9) to balance semantic vs metadata emphasis
 """

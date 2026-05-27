@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     # Local apps
     'accounts',
     'items',
-    'matching',
+    'matching.apps.MatchingConfig',
     'notifications',
     'nlp_service.apps.NlpServiceConfig',
     'whatsapp_bot',

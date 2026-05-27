@@ -115,18 +115,23 @@ def create_notification_task(
     
     try:
         user = User.objects.get(id=user_id)
-        
-        notification = Notification.objects.create(
+
+        notification, created = Notification.objects.get_or_create(
             user=user,
             notification_type=notification_type,
-            title=title,
-            message=message,
             related_match_id=match_id,
-            related_claim_id=claim_id
+            related_claim_id=claim_id,
+            defaults={
+                'title': title,
+                'message': message,
+            },
         )
-        
-        logger.info(f"Created notification {notification.id} for user {user.email}")
-        return {'notification_id': str(notification.id)}
+
+        if created:
+            logger.info(f"Created notification {notification.id} for user {user.email}")
+        else:
+            logger.info(f"Notification already exists {notification.id} for user {user.email}")
+        return {'notification_id': str(notification.id), 'created': created}
     
     except User.DoesNotExist:
         logger.error(f"User {user_id} not found")
